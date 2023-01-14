@@ -9,11 +9,16 @@ from engine.model_check import return_model_version
 
 class SDGenerator():
     def __init__(self,
-                 args
+                 parent
                  ):
+        self.parent = parent
         self.defaults = yaml.load(gs.sd_infer.defaults)
-        self.args = args
+        self.args = copy.deepcopy(self.defaults)
         gs.loadedmodel = None
+    def reset_extras(self):
+        self.pre_run_extras = None
+        self.mid_run_extras = None
+        self.post_run_extras = None
 
     def model_check(self):
         path = f"{gs.system.models}/{self.args.model}"
@@ -27,12 +32,33 @@ class SDGenerator():
 
     def prep_txt2img(self):
 
+        """
+        Create starting noise, determine if we are
+        running hires
+
+
+        """
+
+        self.prep_common()
+
     def prep_img2img(self):
 
+        """
+        Prepare latent image, force txt2img if None is found
+
+        """
+        #Debug print to test init_image type
+        #We should be able to handle Tensor, PIL Image, QT Image, NumPy array, path, url, and byteslike objects
+        #print(type(self.args.init_image))
+
+        self.prep_common()
+    def prep_common(self):
     def inference(self):
 
     def pipeline(self, args=None):
-
+        if self.pre_run_extras is not None:
+            for i in self.pre_run_extras:
+                i(self.args)
         """
         Main entry point for Stable Diffusion inference
         can be called without any arguement.
@@ -57,7 +83,19 @@ class SDGenerator():
         if self.args.model != gs.loadedmodel:
             self.model_check()
         getattr(self, f"prep_{self.args.job}")
+        if self.mid_run_extras is not None:
+            for i in self.mid_run_extras:
+                i(self.args)
+
         images = self.inference()
+
+        if self.post_run_extras is not None:
+            for i in self.post_run_extras:
+                i(self.args)
+
+        if self.args.reset_extras == True:
+            self.reset_extras()
+
         return images
 
 
