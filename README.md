@@ -1,2 +1,2 @@
-# deforum-inference
+# deforum
 deforum inference
