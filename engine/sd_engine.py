@@ -1,5 +1,5 @@
 #Thread safe global storage object
-from engine import singleton
+from deforum_storage import singleton
 gs = singleton
 
 import copy, yaml

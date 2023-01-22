@@ -2,6 +2,7 @@ import datetime
 import threading
 from types import SimpleNamespace
 
+
 system = {}
 diffusion = {}
 models = {}

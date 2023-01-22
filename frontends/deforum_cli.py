@@ -12,11 +12,12 @@ except:
 
 for module in modules:
     try:
+        sys.path.append(module)
         __import__(module)
     except Exception as e:
         print(f"{module} could not be imported: {e}")
 
-class DreamCLI:
+class DeforumCLI:
     def __init__(self):
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument("--width", type=int, default=512)
@@ -35,7 +36,7 @@ class DreamCLI:
 
 
 if __name__ == "__main__":
-    cli = DreamCLI()
+    cli = DeforumCLI()
     while True:
         user_input = input("Enter command: ")
         if user_input == "dream":
