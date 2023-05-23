@@ -23,7 +23,7 @@
 # File author: Shariq Farooq Bhat
 
 from importlib import import_module
-from ..models.depth_model import DepthModel
+from deforum.exttools.zoedepth.models.depth_model import DepthModel
 
 def build_model(config) -> DepthModel:
     """Builds a model from a config. The model is specified by the model name and version in the config. The model is then constructed using the build_from_config function of the model interface.

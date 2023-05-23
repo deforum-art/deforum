@@ -1,10 +1,10 @@
 import torch
 from PIL import Image
 
-from . import ZoeDepthNK
-from .zoedepth.models.builder import build_model
-from .zoedepth.utils.config import get_config
-from .zoedepth.models import zoedepth_nk
+from deforum.exttools import ZoeDepthNK
+from deforum.exttools.zoedepth.models.builder import build_model
+from deforum.exttools.zoedepth.utils.config import get_config
+from deforum.exttools.zoedepth.models import zoedepth_nk
 
 z_conf = {
     "model": {

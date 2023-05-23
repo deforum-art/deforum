@@ -10,10 +10,10 @@ from PIL import Image
 #from modules import lowvram, devices
 #from modules.shared import opts, cmd_opts
 from deforum.general_utils import debug_print
-from .depth_midas import MidasDepth
-from .depth_zoe import ZoeDepth
-from .depth_leres import LeReSDepth
-from .depth_adabins import AdaBinsModel
+from deforum.exttools.depth_midas import MidasDepth
+from deforum.exttools.depth_zoe import ZoeDepth
+from deforum.exttools.depth_leres import LeReSDepth
+from deforum.exttools.depth_adabins import AdaBinsModel
 
 
 class DepthModel:

@@ -1,6 +1,6 @@
 import os
 import torch
-from .infer import InferenceHelper
+from deforum.exttools.infer import InferenceHelper
 import numpy as np
 from PIL import Image
 from deforum.general_utils import download_file_with_checksum

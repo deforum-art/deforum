@@ -22,7 +22,7 @@
 
 # File author: Shariq Farooq Bhat
 
-from .zoedepth_v1 import ZoeDepth 
+from deforum.exttools.zoedepth.models.zoedepth.zoedepth_v1 import ZoeDepth
 
 all_versions = {
     "v1": ZoeDepth,

@@ -26,13 +26,13 @@ import itertools
 
 import torch
 import torch.nn as nn
-from ..depth_model import DepthModel
-from ..base_models.midas import MidasCore
-from ..layers.attractor import AttractorLayer, AttractorLayerUnnormed
-from ..layers.dist_layers import ConditionalLogBinomial
-from ..layers.localbins_layers import (Projector, SeedBinRegressor,
+from deforum.exttools.zoedepth.depth_model import DepthModel
+from deforum.exttools.zoedepth.base_models.midas import MidasCore
+from deforum.exttools.zoedepth.layers.attractor import AttractorLayer, AttractorLayerUnnormed
+from deforum.exttools.zoedepth.layers.dist_layers import ConditionalLogBinomial
+from deforum.exttools.zoedepth.layers.localbins_layers import (Projector, SeedBinRegressor,
                                             SeedBinRegressorUnnormed)
-from ..model_io import load_state_from_resource
+from deforum.exttools.zoedepth.model_io import load_state_from_resource
 
 
 class ZoeDepth(DepthModel):
