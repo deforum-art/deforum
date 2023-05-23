@@ -4,8 +4,8 @@ import torch
 import gc
 import numpy as np
 from deforum.general_utils import download_file_with_checksum
-from midas.dpt_depth import DPTDepthModel
-from midas.transforms import Resize, NormalizeImage, PrepareForNet
+from deforum.exttools.midas.dpt_depth import DPTDepthModel
+from deforum.exttools.midas.transforms import Resize, NormalizeImage, PrepareForNet
 import torchvision.transforms as T
 
 class MidasDepth:

@@ -6,7 +6,7 @@ from deforum.datafunctions.seed import next_seed
 from deforum.avfunctions.video_audio_utilities import vid2frames
 from deforum.datafunctions.prompt import interpolate_prompts
 from deforum.to_tuck_away.generate import generate
-from .animation_key_frames import DeformAnimKeys
+from deforum.animation.animation_key_frames import DeformAnimKeys
 from deforum.datafunctions.parseq_adapter import ParseqAnimKeys
 from deforum.avfunctions.image.save_images import save_image
 from deforum.datafunctions.settings import save_settings_from_animation_run

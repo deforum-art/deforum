@@ -6,7 +6,7 @@ from tqdm import tqdm
 import torch
 import numpy as np
 import cv2
-from .film_util import load_image
+from deforum.exttools.film_interpolation.film_util import load_image
 import time
 from types import SimpleNamespace
 from modules.shared import cmd_opts

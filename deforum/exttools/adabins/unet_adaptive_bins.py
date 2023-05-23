@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import os
 from pathlib import Path
-from .miniViT import mViT
+from deforum.exttools.adabins.miniViT import mViT
 #from modules.shared import opts
 
 class UpSampleBN(nn.Module):

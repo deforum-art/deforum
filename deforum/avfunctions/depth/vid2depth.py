@@ -12,10 +12,10 @@ from modules import devices
 import shutil
 from queue import Queue, Empty
 import modules.scripts as scr
-from .depth import DepthModel
-from .frame_interpolation import clean_folder_name
-from rife.inference_video import duplicate_pngs_from_folder
-from .video_audio_utilities import get_quick_vid_info, vid2frames, ffmpeg_stitch_video
+from deforum.exttools.depth import DepthModel
+from deforum.avfunctions.interpolation.frame_interpolation import clean_folder_name
+from deforum.avfunctions.interpolation.rife.inference_video import duplicate_pngs_from_folder
+from deforum.avfunctions.video_audio_utilities import get_quick_vid_info, vid2frames, ffmpeg_stitch_video
 from modules.shared import opts
 
 DEBUG_MODE = opts.data.get("deforum_debug_mode_enabled", False)
