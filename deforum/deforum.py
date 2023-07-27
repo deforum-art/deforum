@@ -76,7 +76,7 @@ class Deforum:
         if not os.path.exists(self.sample_dir):
             os.makedirs(self.sample_dir)
 
-    def animate_simple(
+    def txt2vid_simple(
         self,
         prompt,
         width=1024,

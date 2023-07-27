@@ -8,18 +8,18 @@ Deforum is a diffusion animation toolkit. You can use it to create simple animat
 pip install deforum
 ```
 
-## Examples 
+## Examples
 
-### Animate Simple
+### Text to Vid Simple
 
-Use animate_simple to generate an animation with your prompt (e.g. "Cat Sushi"), a defined number of frames (e.g. 80), and a strength value (e.g. 0.5).
+Use txt2vid_simple to generate an animation with your prompt (e.g. "Cat Sushi"), a defined number of frames (e.g. 80), and a strength value (e.g. 0.5).
 
 ```py
 from deforum import Deforum
 
 dd = Deforum()
 
-dd.animate_simple(
+dd.txt2vid_simple(
     prompt="Cat Sushi",
     max_frames=80,
     strength=0.5,
