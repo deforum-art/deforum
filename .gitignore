@@ -3,3 +3,4 @@ build/
 deforum.egg-info/
 venv/
 samples/
+*.mp4
