@@ -26,3 +26,5 @@ dd.vid2vid_simple(
     strength=0.62,
 )
 ```
+
+https://pytorch.org/docs/stable/community/design.html
