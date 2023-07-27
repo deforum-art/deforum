@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='deforum',
-    version='0.1.0',
+    version='0.1.2',
     author='deforum',
     author_email='deforum.art@gmail.com',
     description='diffusion animation toolkit',

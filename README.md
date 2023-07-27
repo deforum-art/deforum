@@ -1,12 +1,12 @@
 # Deforum
 
 ```py
-from deforum import DeforumDiffusion
+from deforum import Deforum
 
-# Create an instance of the DeforumDiffusion class
-dd = DeforumDiffusion()
+# Create an instance of the Deforum class
+dd = Deforum()
 
-# Use d instance to call generate function with the values prompt,max_frames and strength
+# Use dd instance to call generate function with the values prompt, max_frames, and strength
 dd.generate(
     prompt="Cat Sushi",
     max_frames=80,
