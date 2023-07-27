@@ -6,3 +6,5 @@ safetensors==0.3.1
 opencv-python==4.8.0.74
 imageio==2.31.1
 imageio-ffmpeg==0.4.8
+natsort==8.4.0
+opencv-python==4.8.0.74

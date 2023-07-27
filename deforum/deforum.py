@@ -42,14 +42,3 @@ class DeforumDiffusion:
             init = image
             strength = 0.55
             image.save(os.path.join(self.sample_dir, self.sample_format.format(iframe+1)))
-
-
-# Create an instance of the DeforumDiffusion class
-dd = DeforumDiffusion()
-
-# Use d instance to call generate function with the values prompt,max_frames and strength
-dd.generate(
-    prompt="Cat Sushi",
-    max_frames=80,
-    strength=0.5,
-)
