@@ -1,0 +1,4 @@
+dist/
+build/
+deforum.egg-info/
+venv/
