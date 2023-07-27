@@ -1,3 +1,0 @@
-<nodes><node name="test"><input name="test" type="Integer" /><output name="test" type="Integer" /><code>test = test
-print(test)</code></node><node name="test2"><input name="test" type="Integer" /><output name="test2" type="Integer" /><code>test = test2
-print(test2)</code></node></nodes>

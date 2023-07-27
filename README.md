@@ -1,2 +1,0 @@
-# deforum
-deforum inference
