@@ -1,9 +1,8 @@
 import os
 import torch
-from img2img import StableDiffusionXLImg2ImgPipeline
+from .pipeline.img2img import StableDiffusionXLImg2ImgPipeline
 
-
-class DeforumDiffusion:
+class Deforum:
     def __init__(
         self,
         model_name="stabilityai/stable-diffusion-xl-base-1.0",

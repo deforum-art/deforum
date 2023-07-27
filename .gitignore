@@ -4,3 +4,5 @@ deforum.egg-info/
 venv/
 samples/
 *.mp4
+test.py
+__pycache__
