@@ -77,7 +77,13 @@ class Deforum:
             os.makedirs(self.sample_dir)
 
     def animate_simple(
-        self, prompt, width=706, height=1280, max_frames=40, strength=0.5, init=None
+        self,
+        prompt,
+        width=1024,
+        height=1024,
+        max_frames=40,
+        strength=0.5,
+        init=None
     ):
         """
         Animate the image transformation step by step according to the given prompt.

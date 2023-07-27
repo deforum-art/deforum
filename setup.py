@@ -1,3 +1,35 @@
+"""
+Setup.py module for the deforum package.
+
+About
+-----
+This setup script uses setuptools to install the deforum package.
+The deforum package is a diffusion animation toolkit.
+
+MIT License
+-----------
+This project is licensed under the MIT License.
+
+Installing
+----------
+To install this package, simply clone the repository and run:
+```
+$ python setup.py install
+```
+
+Dependencies
+------------
+See the `install_requires` parameter for the project dependencies.
+
+More Information
+----------------
+See https://github.com/deforum-art/deforum for more information about this project.
+
+Contact
+-------
+Author: deforum
+Email: deforum.art@gmail.com
+"""
 from setuptools import setup, find_packages
 
 setup(
@@ -6,9 +38,9 @@ setup(
     author='deforum',
     author_email='deforum.art@gmail.com',
     description='diffusion animation toolkit',
-    long_description=open('README.md').read(),
+    long_description=open('README.md','r', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/deforum-art/deforum',  
+    url='https://github.com/deforum-art/deforum',
     packages=find_packages(),
     install_requires=[
         'diffusers==0.19.0',
