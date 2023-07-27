@@ -1,1 +1,1 @@
-from .deforum import Deforum
+from deforum.deforum import Deforum

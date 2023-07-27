@@ -1,6 +1,6 @@
 import os
 import torch
-from .pipeline.img2img import StableDiffusionXLImg2ImgPipeline
+from deforum.pipeline.img2img import StableDiffusionXLImg2ImgPipeline
 
 class Deforum:
     def __init__(
