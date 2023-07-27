@@ -13,6 +13,7 @@ setup(
     install_requires=[
         'diffusers==0.19.0',
         'torch==2.0.1',
+        'torchvision==0.15.2',
         'transformers==4.31.0',
         'accelerate==0.21.0',
         'safetensors==0.3.1',
@@ -24,10 +25,7 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
+        'License :: OSI Approved :: GNU Affero General Public License v3',
+        'Programming Language :: Python :: 3.10',
     ],
 )
