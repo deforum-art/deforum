@@ -44,7 +44,7 @@ def make_video_cv2(image_folder, output_video_path, fps=30, loop=False):
 
     # Release the VideoWriter
     out.release()
-    
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Create a video from images.')
     parser.add_argument('image_folder', type=str, help='Image folder path.')
