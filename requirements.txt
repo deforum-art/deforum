@@ -10,5 +10,5 @@ imageio-ffmpeg
 natsort
 nltk
 pydash
-pydantic
+pydantic<2.0.0
 loguru
