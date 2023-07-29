@@ -34,7 +34,7 @@ class GenerationArgs(DefaultBase):
     cross_attention_kwargs: Optional[Dict[str, Any]] = None
     clip_skip: Optional[int] = None
     seed: Optional[int] = None
-    start_time: Optional[datetime.datetime] = Field(default_factory=lambda: datetime.datetime.now())
+    start_time: Optional[float] = Field(default_factory=lambda: datetime.datetime.now().timestamp())
 
     def to_kwargs(
         self,

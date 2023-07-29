@@ -4,14 +4,12 @@ This module provides the Deforum class which is used for image and video generat
 import os
 
 from loguru import logger
-import torch
 from deforum.backend.custom_text_encoder import CustomCLIPTextModel
 from deforum.modules.custom_attn_processors.attn_processor_flash_2 import AttnProcessorFlash2_2_0
 from deforum.typed_classes import DeforumConfig, GenerationArgs
 from deforum.backend import SDLPWPipelineOneFive
 from deforum.typed_classes.result_base import ResultBase
 from deforum.utils.pytorch_optimizations import channels_last
-from deforum.utils.image_utils import ImageHandler
 
 
 class Deforum:
