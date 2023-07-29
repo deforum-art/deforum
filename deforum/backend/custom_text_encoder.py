@@ -56,11 +56,9 @@ class CustomCLIPTextModel(CLIPTextModel):
             return_dict=return_dict,
         )
         if clip_skip is not None and clip_skip > 0:
-            logger.debug(f"Using clip skip of {clip_skip}")
             last_hidden_state = text_encoder_outputs.hidden_states[-clip_skip]
             normed_state = self.text_model.final_layer_norm(last_hidden_state)
             text_encoder_outputs.last_hidden_state = normed_state
             return text_encoder_outputs
         else:
-            logger.debug(f"Not using clip skip!")
             return text_encoder_outputs
