@@ -1,4 +1,3 @@
-
 from enum import Enum
 from os import PathLike
 from pathlib import Path
@@ -12,16 +11,16 @@ from torchvision.io import decode_jpeg, decode_png, read_file, read_image, write
 
 
 class ImageReadMode(Enum):
-    UNCHANGED = 'UNCHANGED'
-    GRAY = 'GRAY'
-    GRAY_ALPHA = 'GRAY_ALPHA'
-    RGB = 'RGB'
-    RGBA = 'RGBA'
-    BGR = 'BGR'
-    BGRA = 'BGRA'
-    L = 'L'
-    LA = 'LA'
-    P = 'P'
+    UNCHANGED = "UNCHANGED"
+    GRAY = "GRAY"
+    GRAY_ALPHA = "GRAY_ALPHA"
+    RGB = "RGB"
+    RGBA = "RGBA"
+    BGR = "BGR"
+    BGRA = "BGRA"
+    L = "L"
+    LA = "LA"
+    P = "P"
 
     def channels(self):
         if self.name in ["RGB", "BGR"]:
@@ -33,10 +32,10 @@ class ImageReadMode(Enum):
         elif self.name == "GRAY":
             return 1
         else:
-            return -1 # unknown aka UNCHANGED
+            return -1  # unknown aka UNCHANGED
+
 
 class ImageReader:
-    
     @classmethod
     def read_image_torch(cls, image, mode=ImageReadMode.RGB, device="cuda", return_hwc=False, to_numpy=False):
         image = image.as_posix() if isinstance(image, Path) else image
@@ -82,13 +81,13 @@ class ImageReader:
             return _ImageReadMode.RGB_ALPHA
         else:
             raise ValueError(f"Invalid mode {mode}")
-    
+
     @classmethod
     def write_image_torch(cls, image: torch.Tensor, path: PathLike):
-        path = Path(path) if not isinstance(path,Path) else path
+        path = Path(path) if not isinstance(path, Path) else path
         if image.shape[-1] == 3:
             image = image.permute(2, 0, 1)
-        
+
         image = image.float()
         image = image - image.min()
         image = image / image.max()

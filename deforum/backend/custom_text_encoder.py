@@ -1,11 +1,19 @@
 from typing import Optional, Tuple, Union
 from loguru import logger
 import torch
-from transformers.models.clip.modeling_clip import CLIPTextModel, BaseModelOutputWithPooling, CLIPTextConfig, replace_return_docstrings, add_start_docstrings_to_model_forward, CLIP_TEXT_INPUTS_DOCSTRING
+from transformers.models.clip.modeling_clip import (
+    CLIPTextModel,
+    BaseModelOutputWithPooling,
+    CLIPTextConfig,
+    replace_return_docstrings,
+    add_start_docstrings_to_model_forward,
+    CLIP_TEXT_INPUTS_DOCSTRING,
+)
 
 
 class CustomCLIPTextModel(CLIPTextModel):
     default_clip_skip = None
+
     @add_start_docstrings_to_model_forward(CLIP_TEXT_INPUTS_DOCSTRING)
     @replace_return_docstrings(output_type=BaseModelOutputWithPooling, config_class=CLIPTextConfig)
     def forward(
@@ -39,7 +47,7 @@ class CustomCLIPTextModel(CLIPTextModel):
 
         clip_skip = clip_skip if clip_skip is not None else self.default_clip_skip
 
-        text_encoder_outputs:BaseModelOutputWithPooling = self.text_model(
+        text_encoder_outputs: BaseModelOutputWithPooling = self.text_model(
             input_ids=input_ids,
             attention_mask=attention_mask,
             position_ids=position_ids,

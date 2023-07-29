@@ -9,6 +9,5 @@ class GenerationVideo(GenerationArgs):
     fps: int = 30
     math_stuff: int = 0
 
-
     def prepare_schedules(self):
         print("prepare_schedules")
