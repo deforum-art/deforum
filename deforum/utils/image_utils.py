@@ -7,7 +7,16 @@ import numpy as np
 import torch
 from PIL import Image
 from torchvision.io import ImageReadMode as _ImageReadMode
-from torchvision.io import decode_jpeg, decode_png, read_file, read_image, write_png, write_jpeg
+from torchvision.io import (
+    decode_jpeg,
+    decode_png,
+    read_file,
+    read_image,
+    write_png,
+    write_jpeg,
+    encode_jpeg,
+    encode_png,
+)
 
 
 class ImageReadMode(Enum):
@@ -35,7 +44,31 @@ class ImageReadMode(Enum):
             return -1  # unknown aka UNCHANGED
 
 
-class ImageReader:
+class ImageHandler:
+    @classmethod
+    def encode_image_as(cls, image, mode=ImageReadMode.RGB, jpeg_quality=95, png_compression=6, format="jpg"):
+        if isinstance(image, torch.Tensor):
+            if format == "jpg":
+                return encode_jpeg(image, quality=jpeg_quality)
+            elif format == "png":
+                return encode_png(image, compression_level=png_compression)
+            else:
+                raise ValueError(f"Unknown image format {format}")
+        else:
+            raise ValueError(f"Unknown image type {type(image)}")
+
+    @classmethod
+    def to_bytes_torch(cls, image, mode=ImageReadMode.RGB, jpeg_quality=95, png_compression=6, format="jpg"):
+        if isinstance(image, torch.Tensor):
+            if format == "jpg":
+                return encode_jpeg(image, quality=jpeg_quality).detach().cpu().numpy().tobytes()
+            elif format == "png":
+                return encode_png(image, compression_level=png_compression).detach().cpu().numpy().tobytes()
+            else:
+                raise ValueError(f"Unknown image format {format}")
+        else:
+            raise ValueError(f"Unknown image type {type(image)}")
+
     @classmethod
     def read_image_torch(cls, image, mode=ImageReadMode.RGB, device="cuda", return_hwc=False, to_numpy=False):
         image = image.as_posix() if isinstance(image, Path) else image
@@ -83,7 +116,7 @@ class ImageReader:
             raise ValueError(f"Invalid mode {mode}")
 
     @classmethod
-    def write_image_torch(cls, image: torch.Tensor, path: PathLike):
+    def write_image_torch(cls, image: torch.Tensor, path: PathLike, quality=95, compression_level=6):
         path = Path(path) if not isinstance(path, Path) else path
         if image.shape[-1] == 3:
             image = image.permute(2, 0, 1)
@@ -94,8 +127,8 @@ class ImageReader:
         image = image * 255.0
         image = image.clamp(0, 255).detach().type(torch.uint8).cpu()
         if path.suffix == ".jpg" or path.suffix == ".jpeg":
-            write_jpeg(image, path.as_posix())
+            write_jpeg(image, path.as_posix(), quality=quality)
         elif path.suffix == ".png":
-            write_png(image, path.as_posix())
+            write_png(image, path.as_posix(), compression_level=compression_level)
         else:
             raise ValueError(f"Invalid file extension {path.suffix}")

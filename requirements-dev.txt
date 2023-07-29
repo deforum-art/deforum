@@ -12,3 +12,7 @@ nltk
 pydash
 pydantic
 loguru
+pre-commit
+pre-commit-hooks
+black
+isort

@@ -6,8 +6,10 @@ import os
 from loguru import logger
 import torch
 from deforum.backend.custom_text_encoder import CustomCLIPTextModel
+from deforum.modules.custom_attn_processors.attn_processor_flash_2 import AttnProcessorFlash2_2_0
 from deforum.typed_classes import DeforumConfig, GenerationArgs
 from deforum.backend import SDLPWPipelineOneFive
+from deforum.typed_classes.result_base import ResultBase
 from deforum.utils.pytorch_optimizations import channels_last
 from deforum.utils.image_utils import ImageReader
 
@@ -27,7 +29,7 @@ class Deforum:
         self.sample_format = config.sample_format
 
         try:
-            self.pipe = SDLPWPipelineOneFive.from_pretrained(
+            self.pipe: SDLPWPipelineOneFive = SDLPWPipelineOneFive.from_pretrained(
                 self.model_name,
                 text_encoder=CustomCLIPTextModel.from_pretrained(
                     self.model_name,
@@ -46,7 +48,9 @@ class Deforum:
 
         if config.use_xformers:
             self.pipe.enable_xformers_memory_efficient_attention()
-
+        elif config.set_use_flash_attn_2:
+            self.pipe.unet.set_attn_processor(AttnProcessorFlash2_2_0())
+            self.pipe.vae.set_attn_processor(AttnProcessorFlash2_2_0())
         if config.unet_channels_last:
             self.pipe = channels_last(self.pipe)
 
@@ -60,12 +64,9 @@ class Deforum:
         Generate a sample image from the given text prompt.
         """
 
-        if args.seed is not None and args.generator is None:
-            args.generator = torch.Generator(device=self.device).manual_seed(args.seed)
-
-        images = self.pipe(**args.dict(exclude={"output_type", "seed"}), output_type="pt").images
-        for i in range(len(images)):
-            ImageReader.write_image_torch(
-                images[i],
-                os.path.join(self.samples_dir, self.sample_format.format(i)),
-            )
+        images = self.pipe(**args.to_kwargs(), output_type="pt").images
+        return ResultBase(
+            image=images,
+            output_type="pt",
+            args=args,
+        )

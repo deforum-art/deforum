@@ -1,7 +1,10 @@
-from typing import Any, Callable, Dict, List, Optional, Union
-import PIL
+import datetime
+from typing import Any, Callable, Dict, List, Optional, Set, Union
 
+import PIL
 import torch
+from pydantic import Field
+
 from . import DefaultBase
 
 
@@ -31,3 +34,13 @@ class GenerationArgs(DefaultBase):
     cross_attention_kwargs: Optional[Dict[str, Any]] = None
     clip_skip: Optional[int] = None
     seed: Optional[int] = None
+    start_time: Optional[datetime.datetime] = Field(default_factory=lambda: datetime.datetime.now())
+
+    def to_kwargs(
+        self,
+        exclude: Set[str] = {"output_type"},
+        device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+    ) -> Dict[str, Any]:
+        if self.seed is not None and self.generator is None:
+            self.generator = torch.Generator(device=device).manual_seed(self.seed)
+        return self.dict(exclude={"start_time", "seed"}.union(exclude))
