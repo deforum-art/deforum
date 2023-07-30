@@ -18,10 +18,12 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import numpy as np
 import PIL.Image
 import torch
-from transformers import CLIPTextModel, CLIPTextModelWithProjection, CLIPTokenizer
-
 from diffusers.image_processor import VaeImageProcessor
-from diffusers.loaders import FromSingleFileMixin, LoraLoaderMixin, TextualInversionLoaderMixin
+from diffusers.loaders import (
+    FromSingleFileMixin,
+    LoraLoaderMixin,
+    TextualInversionLoaderMixin,
+)
 from diffusers.models import AutoencoderKL, UNet2DConditionModel
 from diffusers.models.attention_processor import (
     AttnProcessor2_0,
@@ -29,15 +31,12 @@ from diffusers.models.attention_processor import (
     LoRAXFormersAttnProcessor,
     XFormersAttnProcessor,
 )
-from diffusers.schedulers import KarrasDiffusionSchedulers
-from diffusers.utils import (
-    logging,
-    randn_tensor,
-    replace_example_docstring,
-)
-from deforum.mixins.diffusers_base import DiffusersBaseMixin
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-from diffusers.pipelines.stable_diffusion_xl import StableDiffusionXLPipelineOutput
+from diffusers.schedulers import KarrasDiffusionSchedulers
+from diffusers.utils import logging, randn_tensor, replace_example_docstring
+from transformers import CLIPTextModel, CLIPTextModelWithProjection, CLIPTokenizer
+
+from deforum.mixins.diffusers_base import DiffusersBaseMixin
 
 # from .watermark import StableDiffusionXLWatermarker
 

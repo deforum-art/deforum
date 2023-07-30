@@ -1,4 +1,4 @@
-from pydantic import BaseModel, BaseConfig
+from pydantic import BaseConfig, BaseModel
 
 
 class DefaultConfig(BaseConfig):

@@ -1,8 +1,9 @@
-import imageio.v2 as iio
-import cv2
-import os
-import glob
 import argparse
+import glob
+import os
+
+import cv2
+import imageio.v2 as iio
 from natsort import natsorted
 
 

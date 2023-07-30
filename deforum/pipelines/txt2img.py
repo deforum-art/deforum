@@ -17,10 +17,12 @@ import os
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
-from transformers import CLIPTextModel, CLIPTextModelWithProjection, CLIPTokenizer
-
 from diffusers.image_processor import VaeImageProcessor
-from diffusers.loaders import FromSingleFileMixin, LoraLoaderMixin, TextualInversionLoaderMixin
+from diffusers.loaders import (
+    FromSingleFileMixin,
+    LoraLoaderMixin,
+    TextualInversionLoaderMixin,
+)
 from diffusers.models import AutoencoderKL, UNet2DConditionModel
 from diffusers.models.attention_processor import (
     AttnProcessor2_0,
@@ -28,6 +30,8 @@ from diffusers.models.attention_processor import (
     LoRAXFormersAttnProcessor,
     XFormersAttnProcessor,
 )
+from diffusers.pipelines.pipeline_utils import DiffusionPipeline
+from diffusers.pipelines.stable_diffusion_xl import StableDiffusionXLPipelineOutput
 from diffusers.schedulers import KarrasDiffusionSchedulers
 from diffusers.utils import (
     is_invisible_watermark_available,
@@ -35,11 +39,9 @@ from diffusers.utils import (
     randn_tensor,
     replace_example_docstring,
 )
-from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-from diffusers.pipelines.stable_diffusion_xl import StableDiffusionXLPipelineOutput
+from transformers import CLIPTextModel, CLIPTextModelWithProjection, CLIPTokenizer
 
 from deforum.mixins.diffusers_base import DiffusersBaseMixin
-
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 

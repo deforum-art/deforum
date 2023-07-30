@@ -1,21 +1,31 @@
+import datetime
 from enum import Enum
 from os import PathLike
 from pathlib import Path
+from typing import Literal, Tuple, Union
 
 import cv2
-import numpy as np
 import torch
+from loguru import logger
 from PIL import Image
 from torchvision.io import ImageReadMode as _ImageReadMode
 from torchvision.io import (
     decode_jpeg,
     decode_png,
-    read_file,
-    read_image,
-    write_png,
-    write_jpeg,
     encode_jpeg,
     encode_png,
+    read_file,
+    read_image,
+    write_jpeg,
+    write_png,
+)
+
+from deforum.typed_classes import ResultBase
+from deforum.utils import (
+    TemplateParser,
+    buffer_index_to_digits,
+    find_next_index_in_template,
+    normalize_text,
 )
 
 
@@ -132,3 +142,120 @@ class ImageHandler:
             write_png(image, path.as_posix(), compression_level=compression_level)
         else:
             raise ValueError(f"Invalid file extension {path.suffix}")
+
+    @classmethod
+    def check_output_type(cls, result: ResultBase):
+        """
+        Helper method to check the output type.
+        Currently, only 'pt' (Pytorch) is supported
+        """
+        assert result.output_type == "pt", f"Only pytorch output type is supported for now, got {result.output_type}"
+
+    @classmethod
+    def check_index(cls, result: ResultBase, index: int):
+        """Helper method to validate the index is within the bounds of image list"""
+        assert index < len(result.image), f"Index {index} is out of bounds for image list of length {len(result.image)}"
+
+    @classmethod
+    def save_images(
+        cls,
+        result: ResultBase,
+        template_str: Union[TemplateParser, str] = "samples/$custom_$timestr_$prompt_$index",
+        image_index: int = -1,
+        custom: str = "sample",
+        quality: int = 95,
+        template_index_key="index",
+        index_digits=6,
+        suffix=".jpg",
+    ):
+        """
+        Save images in a custom directory and filename format.
+        You can use `$custom`, `$timestr`, `$prompt`,and `$index` in the format string.
+        To represent a directory, use slashes `/` in the format string.
+        """
+
+        if template_index_key.startswith("$"):
+            template_index_key = template_index_key[1:]
+
+        if not isinstance(template_str, TemplateParser):
+            template_str = TemplateParser(template_str + suffix if not template_str.endswith(suffix) else template_str)
+        if not template_str.template.endswith(suffix):
+            template_str = TemplateParser(template_str.template + suffix)
+
+        # Make sure index key is in template string
+        assert "$" + template_index_key in template_str.template, (
+            f"Template string must contain the template_index_key! key={template_index_key}, format_str={template_str.template}"
+            + "\n(HINT: This is a template string, meaning you use '$' in a normal string to signify the substitution location of a template key location)"
+        )
+
+        # Generate timestamp
+        time_date = datetime.datetime.fromtimestamp(result.args.start_time)
+        timestr = time_date.strftime("%Y-%m-%dT%H-%M-%S")
+
+        # Normalize prompt text
+        promptstr = normalize_text(result.args.prompt if isinstance(result.args.prompt, str) else result.args.prompt[0])
+
+        # Prepare the images to be saved
+        list_images = result.image if image_index < 0 else [result.image[image_index]]
+
+        kwargs = dict(custom=custom, timestr=timestr, prompt=promptstr)
+        kwargs[template_index_key] = 0
+
+        idx = find_next_index_in_template(
+            template_index_key=template_index_key,
+            template_string=template_str,
+            kwargs=kwargs,
+            minimum_index=0,
+        )
+        # Loop over images and save each
+        for i, image in enumerate(list_images):
+            index = idx + i
+            # Form the path (directory and filename)
+            index = buffer_index_to_digits(index, index_digits)
+            kwargs[template_index_key] = index
+            file_path = template_str.safe_substitute(kwargs)
+            logger.debug(f"Saving image {i} to {template_str.template}, kwargs={kwargs}, file_path={file_path}")
+            file_path = Path(file_path)
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            # Save the image
+            ImageHandler.write_image_torch(image, file_path, quality=quality)
+
+    @classmethod
+    def to_bytes(cls, result: ResultBase, index: int = -1, quality: int = 95) -> bytes:
+        """
+        Method for converting image to bytes.
+        """
+        cls.check_output_type(result)
+        cls.check_index(result, index)
+
+        return ImageHandler.to_bytes_torch(result.image[index], jpeg_quality=quality)
+
+
+def resize_tensor_result(
+    result: ResultBase, new_size: Tuple[int, int], tensor_format: Literal["nchw", "hwc", "nhwc", "chw"] = "nhwc"
+):
+    """
+    Resize the given image to the given size.
+
+        args (GenerationArgs): The arguments used to generate the image.
+        result (ResultBase): The image to resize.
+        new_size (Tuple[int,int]): The new size of the image in (height, width) format.
+        tensor_format (str): The format of the tensor. One of "nchw", "hwc", "nhwc", "chw".
+
+    Returns:
+        ResultBase: The resized image contained in a ResultBase object, with the new size in the args, and the resized image in the image field.
+        Also, the image is in the "nchw" format.
+
+    """
+    if tensor_format == "nhwc":
+        result.image = result.image.permute(0, 3, 1, 2)
+    elif tensor_format == "hwc":
+        result.image = result.image.permute(2, 0, 1).unsqueeze(0)
+    elif tensor_format == "chw":
+        result.image = result.image.unsqueeze(0)
+
+    result.image = torch.nn.functional.interpolate(result.image, size=new_size, mode="bicubic", antialias=True)
+    result.args.height = new_size[0]
+    result.args.width = new_size[1]
+    result.args.image = result.image
+    return result

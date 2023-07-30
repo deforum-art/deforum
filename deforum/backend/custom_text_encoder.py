@@ -1,13 +1,13 @@
 from typing import Optional, Tuple, Union
-from loguru import logger
+
 import torch
 from transformers.models.clip.modeling_clip import (
-    CLIPTextModel,
+    CLIP_TEXT_INPUTS_DOCSTRING,
     BaseModelOutputWithPooling,
     CLIPTextConfig,
-    replace_return_docstrings,
+    CLIPTextModel,
     add_start_docstrings_to_model_forward,
-    CLIP_TEXT_INPUTS_DOCSTRING,
+    replace_return_docstrings,
 )
 
 

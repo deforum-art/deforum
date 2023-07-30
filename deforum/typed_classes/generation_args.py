@@ -2,8 +2,8 @@ import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Literal, Optional, Set, Union
 
-import PIL
 import numpy as np
+import PIL
 import torch
 from diffusers.schedulers import (
     DDIMScheduler,

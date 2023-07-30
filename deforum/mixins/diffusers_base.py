@@ -1,8 +1,5 @@
 import torch
-from diffusers.utils import (
-    is_accelerate_available,
-    is_accelerate_version,
-)
+from diffusers.utils import is_accelerate_available, is_accelerate_version
 
 
 class DiffusersBaseMixin:

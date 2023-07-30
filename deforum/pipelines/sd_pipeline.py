@@ -6,9 +6,16 @@ import torch
 from diffusers import DiffusionPipeline
 from diffusers.configuration_utils import FrozenDict
 from diffusers.image_processor import VaeImageProcessor
-from diffusers.loaders import FromSingleFileMixin, LoraLoaderMixin, TextualInversionLoaderMixin
+from diffusers.loaders import (
+    FromSingleFileMixin,
+    LoraLoaderMixin,
+    TextualInversionLoaderMixin,
+)
 from diffusers.models import AutoencoderKL, UNet2DConditionModel
-from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput, StableDiffusionSafetyChecker
+from diffusers.pipelines.stable_diffusion import (
+    StableDiffusionPipelineOutput,
+    StableDiffusionSafetyChecker,
+)
 from diffusers.schedulers import KarrasDiffusionSchedulers
 from diffusers.utils import deprecate, randn_tensor
 from loguru import logger
@@ -16,7 +23,11 @@ from packaging import version
 from transformers import CLIPImageProcessor, CLIPTextModel, CLIPTokenizer
 
 from deforum.mixins import DiffusersBaseMixin
-from deforum.modules import get_weighted_sd_text_embeddings, preprocess_image, preprocess_mask
+from deforum.modules import (
+    get_weighted_sd_text_embeddings,
+    preprocess_image,
+    preprocess_mask,
+)
 
 # ------------------------------------------------------------------------------
 

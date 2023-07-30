@@ -1,1 +1,2 @@
-from deforum.pipelines.img2img import StableDiffusionXLImg2ImgPipeline
+from .img2img import StableDiffusionXLImg2ImgPipeline
+from .sd_pipeline import SDLPWPipelineOneFive

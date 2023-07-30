@@ -18,7 +18,7 @@ class MixedModel(BaseModel):
         arbitrary_types_allowed = True
         underscore_attrs_are_private = True
 
-    def _resolve_models(self):
+    def _resolve_models(self) -> None:
         new_models = {}
         for model, amt in self.models.items():
             if isinstance(model, UNet2DConditionModel):
@@ -27,7 +27,7 @@ class MixedModel(BaseModel):
             if isinstance(model, (Path, str)):
                 try:
                     model = UNet2DConditionModel.from_pretrained(model, torch_dtype=torch.float32)
-                except Exception as e:
+                except Exception as _:
                     model = UNet2DConditionModel.from_pretrained(model, torch_dtype=torch.float32, subfolder="unet")
                 new_models[model] = amt
         self.models = new_models
@@ -56,7 +56,7 @@ class MixedModel(BaseModel):
         self._sd_keys = keys
         return sds, keys
 
-    def _merge_on_key(self, key: str):
+    def _merge_on_key(self, key: str) -> torch.Tensor:
         if not self._is_resolved:
             self._to_statedicts()
         new_tensor = None
@@ -67,7 +67,7 @@ class MixedModel(BaseModel):
                 new_tensor += sd[key] * amt
         return new_tensor
 
-    def merge_into(self, unet: UNet2DConditionModel):
+    def merge_into(self, unet: UNet2DConditionModel) -> UNet2DConditionModel:
         sd = OrderedDict()
         if not self._is_resolved:
             self._to_statedicts()
@@ -79,7 +79,7 @@ class MixedModel(BaseModel):
         unet.load_state_dict(sd)
         return unet
 
-    def merge(self):
+    def merge(self) -> UNet2DConditionModel:
         if not self._is_resolved:
             self._to_statedicts()
         model = list(self.models.keys())[0]

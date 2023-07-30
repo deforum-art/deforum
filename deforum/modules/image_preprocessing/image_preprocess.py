@@ -1,9 +1,7 @@
 import numpy as np
 import torch
+from diffusers.utils import PIL_INTERPOLATION
 from torchvision.transforms import functional as TF
-from diffusers.utils import (
-    PIL_INTERPOLATION,
-)
 
 
 def preprocess_image(image, batch_size):

@@ -1,9 +1,10 @@
+import json
 import os
 from typing import List
+
 from huggingface_hub import HfApi
-from huggingface_hub.hf_api import RepoFile
 from huggingface_hub.file_download import hf_hub_download
-import json
+from huggingface_hub.hf_api import RepoFile
 
 
 def find_model_type(model_name):
