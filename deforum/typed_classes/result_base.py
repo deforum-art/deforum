@@ -7,8 +7,9 @@ import numpy as np
 import torch
 from PIL import Image
 
+from deforum.utils import ImageHandler, normalize_text
+
 from . import DefaultBase, GenerationArgs
-from deforum.utils import normalize_text, ImageHandler
 
 
 class ResultBase(DefaultBase):
@@ -25,20 +26,25 @@ class ResultBase(DefaultBase):
         index: int = -1,
         format_str: str = "{prompt}_{index:06d}.jpg",
         quality: int = 95,
+        custom_index: Optional[int] = None,
     ):
         if samples_dir is None:
             samples_dir = self.samples_dir
         samples_dir = Path(samples_dir) if not isinstance(samples_dir, Path) else samples_dir
         samples_dir.mkdir(exist_ok=True, parents=True)
         # TODO: add support for multiple image types (just going to use tensor for now)
+
         time_date = datetime.datetime.fromtimestamp(self.args.start_time)
-        timestr = time_date.strftime("%m-%dT-%Y%H-%M-%S")
+        timestr = time_date.strftime("%B_%d_%Y_%I.%M%p")
+
         assert self.output_type == "pt", f"Only pt output type is supported for now, got {self.output_type}"
         if not (samples_dir / timestr).exists():
             (samples_dir / timestr).mkdir(exist_ok=True, parents=True)
         promptstr = normalize_text(self.args.prompt if isinstance(self.args.prompt, str) else self.args.prompt[0])
         if index < 0:
             for i, image in enumerate(self.image):
+                if custom_index is not None:
+                    i = i + custom_index
                 ImageHandler.write_image_torch(
                     image, ((samples_dir / timestr) / format_str.format(prompt=promptstr, index=i)), quality=quality
                 )
@@ -46,7 +52,7 @@ class ResultBase(DefaultBase):
             assert index < len(self.image), f"Index {index} is out of bounds for image list of length {len(self.image)}"
             ImageHandler.write_image_torch(
                 self.image[index],
-                ((samples_dir / timestr) / format_str.format(prompt=promptstr, index=0)),
+                ((samples_dir / timestr) / format_str.format(prompt=promptstr, index=custom_index or 0)),
                 quality=quality,
             )
         return self

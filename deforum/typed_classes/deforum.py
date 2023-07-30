@@ -4,6 +4,8 @@ import torch
 from diffusers.utils import is_xformers_available
 from pydantic import validator
 
+from deforum.utils.model_mixing import MixedModel
+
 from . import DefaultBase
 
 
@@ -20,6 +22,7 @@ class DeforumConfig(DefaultBase):
     enable_pytorch_optimizations: Optional[bool] = True
     unet_channels_last: Optional[bool] = False
     set_use_flash_attn_2: Optional[bool] = False
+    multi_model: MixedModel = None
 
     @validator("use_xformers", pre=True)
     def validate_xformers(cls, value, values, config, field):

@@ -362,9 +362,9 @@ class SDLPWPipelineOneFive(
             init_latents = self.vae.config.scaling_factor * init_latents
 
             # Expand init_latents for batch_size and num_images_per_prompt
-            init_latents = torch.cat([init_latents] * num_images_per_prompt, dim=0)
+            if init_latents.shape[0] != num_images_per_prompt:
+                init_latents = torch.cat([init_latents] * num_images_per_prompt, dim=0)
             init_latents_orig = init_latents
-
             # add noise to latents using the timesteps
             noise = randn_tensor(init_latents.shape, generator=generator, device=self.device, dtype=dtype)
             init_latents = self.scheduler.add_noise(init_latents, noise, timestep)
@@ -529,6 +529,7 @@ class SDLPWPipelineOneFive(
             image = preprocess_image(image, batch_size)
         if image is not None:
             image = image.to(device=self.device, dtype=dtype)
+            num_images_per_prompt = image.shape[0]
         if isinstance(mask_image, PIL.Image.Image):
             mask_image = preprocess_mask(mask_image, batch_size, self.vae_scale_factor)
         if mask_image is not None:

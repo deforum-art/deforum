@@ -1,11 +1,50 @@
 import datetime
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from enum import Enum
+from typing import Any, Callable, Dict, List, Literal, Optional, Set, Union
 
 import PIL
+import numpy as np
 import torch
+from diffusers.schedulers import (
+    DDIMScheduler,
+    DPMSolverMultistepScheduler,
+    DPMSolverSDEScheduler,
+    DPMSolverSinglestepScheduler,
+    EulerAncestralDiscreteScheduler,
+    EulerDiscreteScheduler,
+    LMSDiscreteScheduler,
+    PNDMScheduler,
+    UniPCMultistepScheduler,
+)
 from pydantic import Field
 
 from . import DefaultBase
+
+
+class SchedulerType(Enum):
+    EULER_ANCESTRAL = "euler_ancestral"
+    EULER = "euler"
+    PNDM = "pndm"
+    DPMPP_SINGLESTEP = "dpmpp_singlestep"
+    DPMPP_MULTISTEP = "dpmpp_multistep"
+    LMS = "lms"
+    DDIM = "ddim"
+    UNIPC = "unipc"
+    SDE = "sde"
+
+    def to_scheduler(self):
+        opts = {
+            self.EULER_ANCESTRAL.value: EulerAncestralDiscreteScheduler,
+            self.EULER.value: EulerDiscreteScheduler,
+            self.DDIM.value: DDIMScheduler,
+            self.PNDM.value: PNDMScheduler,
+            self.DPMPP_MULTISTEP.value: DPMSolverMultistepScheduler,
+            self.DPMPP_SINGLESTEP.value: DPMSolverSinglestepScheduler,
+            self.LMS.value: LMSDiscreteScheduler,
+            self.UNIPC.value: UniPCMultistepScheduler,
+            self.SDE.value: DPMSolverSDEScheduler,
+        }
+        return opts.get(self.value, EulerAncestralDiscreteScheduler)
 
 
 class GenerationArgs(DefaultBase):
@@ -33,7 +72,10 @@ class GenerationArgs(DefaultBase):
     callback_steps: int = 1
     cross_attention_kwargs: Optional[Dict[str, Any]] = None
     clip_skip: Optional[int] = None
-    seed: Optional[int] = None
+    sampler: Optional[SchedulerType] = SchedulerType.EULER_ANCESTRAL
+    repeat: Optional[int] = 1
+    seed: Optional[int] = Field(default_factory=lambda: np.random.randint(0, (2**16) - 1))
+    seed_mode: Optional[Literal["random", "iter", "constant"]] = "iter"
     start_time: Optional[float] = Field(default_factory=lambda: datetime.datetime.now().timestamp())
 
     def to_kwargs(
@@ -43,4 +85,4 @@ class GenerationArgs(DefaultBase):
     ) -> Dict[str, Any]:
         if self.seed is not None and self.generator is None:
             self.generator = torch.Generator(device=device).manual_seed(self.seed)
-        return self.dict(exclude={"start_time", "seed"}.union(exclude))
+        return self.dict(exclude={"start_time", "seed", "sampler", "repeat", "seed_mode"}.union(exclude))
