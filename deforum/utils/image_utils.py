@@ -21,7 +21,7 @@ from torchvision.io import (
 )
 
 from deforum.typed_classes import ResultBase
-from deforum.utils import (
+from deforum.utils.string_parsing import (
     TemplateParser,
     buffer_index_to_digits,
     find_next_index_in_template,

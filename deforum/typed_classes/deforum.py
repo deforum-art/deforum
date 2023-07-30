@@ -4,8 +4,8 @@ import torch
 from diffusers.utils import is_xformers_available
 from pydantic import validator
 
-from deforum.utils.model_mixing import MixedModel
 
+from deforum.utils import MixedModel
 from . import DefaultBase
 
 
