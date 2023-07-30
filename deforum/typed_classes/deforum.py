@@ -10,19 +10,18 @@ from . import DefaultBase
 
 
 class DeforumConfig(DefaultBase):
-    model_name: str = "stabilityai/stable-diffusion-xl-base-1.0"
+    model_name: str = "Lykon/AbsoluteReality"
     dtype: torch.dtype = torch.float16
     device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     variant: Optional[str]
     use_safetensors: Optional[bool]
-    samples_dir: Optional[str] = "samples"
-    sample_format: Optional[str] = "sample_{:05d}.png"
-    pipeline_type: Literal["sdxl", "sd1.5", "sd2.1"] = "sd1.5"
+
+    model_type: Literal["sdxl", "sd1.5", "sd2.1"] = "sd1.5"
+    pipeline_type: Optional[Literal["base", "vid2vid", "2stage"]] = "base"
+
     use_xformers: Optional[bool] = False
-    enable_pytorch_optimizations: Optional[bool] = True
-    unet_channels_last: Optional[bool] = False
     set_use_flash_attn_2: Optional[bool] = False
-    multi_model: MixedModel = None
+    mixed_model: MixedModel = None
 
     @validator("use_xformers", pre=True)
     def validate_xformers(cls, value, values, config, field):
@@ -33,16 +32,6 @@ class DeforumConfig(DefaultBase):
                 )
             else:
                 return True
-        else:
-            return False
-
-    @validator("enable_pytorch_optimizations", pre=True)
-    def validate_pytorch_optimizations(cls, value, values, config, field):
-        if value:
-            from deforum.utils.pytorch_optimizations import enable_optimizations
-
-            enable_optimizations()
-            return True
         else:
             return False
 

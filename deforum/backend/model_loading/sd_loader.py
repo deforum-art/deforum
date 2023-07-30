@@ -1,9 +1,7 @@
-import torch
 from loguru import logger
 
-from deforum.backend import CustomCLIPTextModel
+from deforum.backend import CustomCLIPTextModel, SDLPWPipelineOneFive
 from deforum.modules import AttnProcessorFlash2_2_0
-from deforum.pipelines import SDLPWPipelineOneFive
 from deforum.typed_classes import DeforumConfig
 from deforum.utils import channels_last
 
@@ -12,9 +10,8 @@ class SDLoader:
     @classmethod
     def load(cls, config: DeforumConfig) -> SDLPWPipelineOneFive:
         extra = {}
-        device = config.device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        if config.multi_model:
-            extra["unet"] = config.multi_model.merge().to(dtype=config.dtype)
+        if config.mixed_model:
+            extra["unet"] = config.mixed_model.merge().to(dtype=config.dtype)
 
         try:
             pipe: SDLPWPipelineOneFive = SDLPWPipelineOneFive.from_pretrained(
@@ -40,6 +37,5 @@ class SDLoader:
         elif config.set_use_flash_attn_2:
             pipe.unet.set_attn_processor(AttnProcessorFlash2_2_0())
             pipe.vae.set_attn_processor(AttnProcessorFlash2_2_0())
-        if config.unet_channels_last:
-            pipe = channels_last(pipe)
+        pipe = channels_last(pipe)
         return pipe

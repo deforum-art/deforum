@@ -129,7 +129,7 @@ class ImageHandler:
     def write_image_torch(cls, image: torch.Tensor, path: PathLike, quality=95, compression_level=6):
         path = Path(path) if not isinstance(path, Path) else path
         if image.shape[-1] == 3:
-            image = image.permute(2, 0, 1)
+            image = image.clone().permute(2, 0, 1)
 
         image = image.float()
         image = image - image.min()
@@ -196,6 +196,9 @@ class ImageHandler:
         promptstr = normalize_text(result.args.prompt if isinstance(result.args.prompt, str) else result.args.prompt[0])
 
         # Prepare the images to be saved
+        assert (
+            len(result.image) > image_index
+        ), f"Image index {image_index} is out of bounds for image list of length {len(result.image)}"
         list_images = result.image if image_index < 0 else [result.image[image_index]]
 
         kwargs = dict(custom=custom, timestr=timestr, prompt=promptstr)
@@ -214,7 +217,7 @@ class ImageHandler:
             index = buffer_index_to_digits(index, index_digits)
             kwargs[template_index_key] = index
             file_path = template_str.safe_substitute(kwargs)
-            logger.debug(f"Saving image {i} to {template_str.template}, kwargs={kwargs}, file_path={file_path}")
+            logger.info(f"Saving image {i} to file_path={file_path}")
             file_path = Path(file_path)
             file_path.parent.mkdir(parents=True, exist_ok=True)
             # Save the image

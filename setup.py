@@ -1,35 +1,3 @@
-"""
-Setup.py module for the deforum package.
-
-About
------
-This setup script uses setuptools to install the deforum package.
-The deforum package is a diffusion animation toolkit.
-
-MIT License
------------
-This project is licensed under the MIT License.
-
-Installing
-----------
-To install this package, simply clone the repository and run:
-```
-$ python setup.py install
-```
-
-Dependencies
-------------
-See the `install_requires` parameter for the project dependencies.
-
-More Information
-----------------
-See https://github.com/deforum-art/deforum for more information about this project.
-
-Contact
--------
-Author: deforum
-Email: deforum.art@gmail.com
-"""
 from setuptools import find_packages, setup
 
 setup(
@@ -43,16 +11,21 @@ setup(
     url="https://github.com/deforum-art/deforum",
     packages=find_packages(),
     install_requires=[
-        "diffusers==0.19.0",
-        "torch==2.0.1",
-        "torchvision==0.15.2",
-        "transformers==4.31.0",
-        "accelerate==0.21.0",
-        "safetensors==0.3.1",
-        "opencv-python==4.8.0.74",
-        "imageio==2.31.1",
-        "imageio-ffmpeg==0.4.8",
-        "natsort==8.4.0",
+        "diffusers>0.19.0",
+        "torch>=2.0.0",
+        "torchvision",
+        "transformers",
+        "accelerate",
+        "safetensors",
+        "opencv-python-headless",
+        "imageio",
+        "imageio-ffmpeg",
+        "natsort",
+        "nltk",
+        "pydash",
+        "pydantic<2.0.0",
+        "loguru",
+        "einops",
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",

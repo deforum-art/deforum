@@ -12,6 +12,7 @@ nltk
 pydash
 pydantic<2.0.0
 loguru
+einops
 pre-commit
 pre-commit-hooks
 black

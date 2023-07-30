@@ -65,18 +65,20 @@ class GenerationArgs(DefaultBase):
     prompt_embeds: Optional[torch.FloatTensor] = None
     negative_prompt_embeds: Optional[torch.FloatTensor] = None
     max_embeddings_multiples: Optional[int] = 3
-    output_type: Optional[str] = "pil"
-    return_dict: bool = True
+    output_type: Optional[str] = "pt"
     callback: Optional[Callable[[int, int, torch.FloatTensor], None]] = None
     is_cancelled_callback: Optional[Callable[[], bool]] = None
     callback_steps: int = 1
     cross_attention_kwargs: Optional[Dict[str, Any]] = None
     clip_skip: Optional[int] = None
     sampler: Optional[SchedulerType] = SchedulerType.EULER_ANCESTRAL
-    repeat: Optional[int] = 1
     seed: Optional[int] = Field(default_factory=lambda: np.random.randint(0, (2**16) - 1))
-    seed_mode: Optional[Literal["random", "iter", "constant"]] = "iter"
     start_time: Optional[float] = Field(default_factory=lambda: datetime.datetime.now().timestamp())
+    repeat: Optional[int] = 1
+    seed_mode: Optional[Literal["random", "iter", "constant"]] = "iter"
+    seed_list: Optional[List[int]] = None
+    save_intermediates: Optional[bool] = True
+    template_save_path: Optional[str] = "samples/$prompt/$timestr/$custom_$index"
 
     def to_kwargs(
         self,
@@ -85,4 +87,14 @@ class GenerationArgs(DefaultBase):
     ) -> Dict[str, Any]:
         if self.seed is not None and self.generator is None:
             self.generator = torch.Generator(device=device).manual_seed(self.seed)
-        return self.dict(exclude={"start_time", "seed", "sampler", "repeat", "seed_mode"}.union(exclude))
+        return self.dict(
+            exclude={
+                "start_time",
+                "seed",
+                "sampler",
+                "repeat",
+                "seed_mode",
+                "template_save_path",
+                "save_intermediates",
+            }.union(exclude)
+        )

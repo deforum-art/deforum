@@ -32,7 +32,7 @@ def normalize_text(prompt, sep="-", truncate_to=64):
 
     words = deburr(prompt)
     words = slugify(words, separator=" ")
-    # words = words.split(sep)
+
     try:
         words = [word for word in word_tokenize(words) if word not in filler_words]
     except Exception as e:

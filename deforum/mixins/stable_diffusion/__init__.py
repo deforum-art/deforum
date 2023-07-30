@@ -1,0 +1,1 @@
+from .stable_base_mixin import StableDiffusionBaseMixin
