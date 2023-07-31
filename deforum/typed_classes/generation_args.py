@@ -75,7 +75,7 @@ class GenerationArgs(DefaultBase):
     seed: Optional[int] = Field(default_factory=lambda: np.random.randint(0, (2**16) - 1))
     start_time: Optional[float] = Field(default_factory=lambda: datetime.datetime.now().timestamp())
     repeat: Optional[int] = 1
-    seed_mode: Optional[Literal["random", "iter", "constant"]] = "iter"
+    seed_mode: Optional[Literal["random", "iter", "constant", "ladder"]] = "iter"
     seed_list: Optional[List[int]] = None
     save_intermediates: Optional[bool] = True
     template_save_path: Optional[str] = "samples/$prompt/$timestr/$custom_$index"

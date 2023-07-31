@@ -33,7 +33,16 @@ class TwoStagePipeline:
             stage1_result = resize_tensor_result(stage1_result, (args.height * 2, args.width * 2), tensor_format="nchw")
             stage2_args = stage1_result.args.copy(deep=True, exclude={"generator"})
             stage2_args.save_intermediates = save_intermediates
+
+            # Update stage2_args with values from the GenerationArgsTwoStage object
+
+            stage2_args.prompt = args.prompt_stage2 or args.prompt
+            stage2_args.eta = args.eta_stage2 or args.eta
+            stage2_args.num_inference_steps = args.num_inference_steps_stage2 or args.num_inference_steps
+            stage2_args.sampler = args.sampler_stage2 or args.sampler
+            stage2_args.guidance_scale = args.guidance_stage2 or args.guidance_scale
             stage2_args.strength = args.strength_stage2 or args.strength
+            stage2_args.negative_prompt = args.negative_prompt_stage2 or args.negative_prompt
 
             stage2_result = self.base_pipeline.sample(model, stage2_args)
             images.append(stage2_result.image.cpu())
