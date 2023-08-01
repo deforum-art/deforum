@@ -67,7 +67,6 @@ Here's a basic example:
 ```python
 import torch
 from deforum import Deforum, DeforumConfig, GenerationArgs
-from deforum.utils.model_mixing import MixedModel
 
 config = DeforumConfig(
     model_name="Lykon/AbsoluteReality",
@@ -95,7 +94,7 @@ Deforum is licensed under the MIT License.
 
 For more information please refer to [license](https://github.com/deforum-art/deforum/blob/main/LICENSE).
 
-## Note
+## Notes
 
 ```
 backend:

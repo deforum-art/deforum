@@ -1,10 +1,39 @@
+"""
+Module for Defining Image Generation Parameters and Related Functions
+
+This module provides the necessary classes and functions for defining and managing
+the parameters of an image generation task. 
+It contains the `GenerationArgs` class which is a model for the parameters used in image generating,
+the `SchedulerType` class which defines enumerated types for scheduler, and their related methods.
+
+The module has dependencies on several other libraries including torch, PIL, numpy, 
+and the built-in datetime and enum libraries.
+
+Attributes:
+----------
+SchedulerType : class
+    Enumerated type for schedulers.
+
+GenerationArgs : class
+    Definition of the parameters for image generation.
+
+Functions:
+----------
+to_scheduler() : function
+    Maps the `SchedulerType` classes' enumerated types to the corresponding scheduler objects.
+
+to_kwargs(device, exclude) : function
+    Converts the GenerationArgs object to a dictionary for image generation.
+"""
 import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Literal, Optional, Set, Union
 
 import numpy as np
-import PIL
 import torch
+import PIL
+
+from pydantic import Field
 from diffusers.schedulers import (
     DDIMScheduler,
     DPMSolverMultistepScheduler,
@@ -16,12 +45,23 @@ from diffusers.schedulers import (
     PNDMScheduler,
     UniPCMultistepScheduler,
 )
-from pydantic import Field
-
 from . import DefaultBase
 
 
 class SchedulerType(Enum):
+    """
+    An enumeration representing different scheduler types. 
+    
+    Enum Members
+    ------------
+    EULER_ANCESTRAL, EULER, PNDM, DPMPP_SINGLESTEP, DPMPP_MULTISTEP, 
+    LMS, DDIM, UNIPC, SDE 
+    
+    Methods
+    -------
+    to_scheduler : 
+        returns a dictionary mapping enum members to their respective scheduler classes
+    """
     EULER_ANCESTRAL = "euler_ancestral"
     EULER = "euler"
     PNDM = "pndm"
@@ -33,7 +73,15 @@ class SchedulerType(Enum):
     SDE = "sde"
 
     def to_scheduler(self):
-        opts = {
+        """
+        Maps the enum's values to the corresponding scheduler objects.
+
+        Returns
+        -------
+        object
+            The scheduler object corresponding to the enum value.
+        """
+        return {
             self.EULER_ANCESTRAL.value: EulerAncestralDiscreteScheduler,
             self.EULER.value: EulerDiscreteScheduler,
             self.DDIM.value: DDIMScheduler,
@@ -43,11 +91,83 @@ class SchedulerType(Enum):
             self.LMS.value: LMSDiscreteScheduler,
             self.UNIPC.value: UniPCMultistepScheduler,
             self.SDE.value: DPMSolverSDEScheduler,
-        }
-        return opts.get(self.value, EulerAncestralDiscreteScheduler)
+        }.get(self.value, EulerAncestralDiscreteScheduler)
 
 
 class GenerationArgs(DefaultBase):
+    """
+    GenerationArgs is a model for the parameters used in generating images.
+
+    Attributes:
+    ----------
+    prompt : Union[str, List[str]]
+        The main prompts used in generation.
+    negative_prompt : Optional[Union[str, List[str]]]
+        The negative prompts used in generation (Optional).
+    image : Union[torch.FloatTensor, PIL.Image.Image]
+        The input image used for generation.
+    mask_image : Union[torch.FloatTensor, PIL.Image.Image]
+        The mask image used for generation.
+    height : int
+        The height of the resulting image.
+    width : int
+        The width of the resulting image.
+    num_inference_steps : int
+        The number of inference steps in the generation process.
+    guidance_scale : float
+        The guidance scale used in the generation process.
+    strength : float
+        The strength factor used in the generation process.
+    num_images_per_prompt : Optional[int]
+        The number of images generated per prompt.
+    add_predicted_noise : Optional[bool]
+        Flag to add predicted noise in the generation process.
+    eta : float
+        The eta parameter used in the generation process.
+    generator : Optional[Union[torch.Generator, List[torch.Generator]]]
+        The generator or list of generators used in the generation process.
+    latents : Optional[torch.FloatTensor]
+        The latent space used in the generation process.
+    prompt_embeds : Optional[torch.FloatTensor]
+        The prompt embeddings used in the generation process.
+    negative_prompt_embeds : Optional[torch.FloatTensor]
+        The negative prompt embeddings used in the generation process.
+    max_embeddings_multiples : Optional[int]
+        The maximum multiples of embeddings used in the generation process.
+    output_type : Optional[str]
+        The type of the output from the generation process.
+    callback : Optional[Callable[[int, int, torch.FloatTensor], None]]
+        The callback function executed at each step of the generation process.
+    is_cancelled_callback : Optional[Callable[[], bool]]
+        The callback function used to check whether the generation process is cancelled.
+    callback_steps : int
+        The number of steps between each call to the callback function.
+    cross_attention_kwargs : Optional[Dict[str, Any]]
+        Dictionary of keyword arguments for the cross attention layer.
+    clip_skip : Optional[int]
+        The interval at which to skip frames during video generation.
+    sampler : Optional[SchedulerType]
+        The scheduler type used in the generation process.
+    seed : Optional[int]
+        The seed for the random number generator.
+    start_time : Optional[float]
+        The starting time of the generation process.
+    repeat : Optional[int]
+        The number of times to repeat the generation process for each prompt.
+    seed_mode : Optional[Literal["random", "iter", "constant", "ladder"]]
+        The mode of seed generation.
+    seed_list : Optional[List[int]]
+        The list of seeds to be used in the generation process.
+    save_intermediates : Optional[bool]
+        Flag to specify whether to save intermediate frames.
+    template_save_path : Optional[str]
+        The template path for saving the generated images.
+
+    Methods
+    -------
+    to_kwargs(device: torch.device, exclude: Set[str]):
+        Converts the GenerationArgs object to a dictionary usable for image generation.
+    """
     prompt: Union[str, List[str]]
     negative_prompt: Optional[Union[str, List[str]]] = None
     image: Union[torch.FloatTensor, PIL.Image.Image] = None
@@ -82,10 +202,28 @@ class GenerationArgs(DefaultBase):
 
     def to_kwargs(
         self,
-        exclude: Set[str] = {"output_type"},
         device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+        exclude: Set[str] = {"output_type"},
     ) -> Dict[str, Any]:
-        if self.seed is not None and self.generator is None:
+        """
+        Converts the GenerationArgs object to a dict usable for image generation.
+
+        If both seed and generator are present but the generator is not populated,
+        a generator is created with the given seed.
+
+        Parameters
+        ----------
+        device : torch.device
+            The device on which to create the torch Generator (if needed).
+        exclude : Set[str]
+            The keys to exclude from the returned dictionary.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A dictionary that can be used to guide image generation.
+        """
+        if self.seed and not self.generator:
             self.generator = torch.Generator(device=device).manual_seed(self.seed)
         return self.dict(
             exclude={
