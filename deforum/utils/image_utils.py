@@ -56,7 +56,7 @@ class ImageReadMode(Enum):
 
 class ImageHandler:
     @classmethod
-    def encode_image_as(cls, image, mode=ImageReadMode.RGB, jpeg_quality=95, png_compression=6, format="jpg"):
+    def encode_image_as(cls, image, jpeg_quality=95, png_compression=6, format="jpg"):
         if isinstance(image, torch.Tensor):
             if format == "jpg":
                 return encode_jpeg(image, quality=jpeg_quality)
@@ -68,7 +68,7 @@ class ImageHandler:
             raise ValueError(f"Unknown image type {type(image)}")
 
     @classmethod
-    def to_bytes_torch(cls, image, mode=ImageReadMode.RGB, jpeg_quality=95, png_compression=6, format="jpg"):
+    def to_bytes_torch(cls, image, jpeg_quality=95, png_compression=6, format="jpg"):
         if isinstance(image, torch.Tensor):
             if format == "jpg":
                 return encode_jpeg(image, quality=jpeg_quality).detach().cpu().numpy().tobytes()

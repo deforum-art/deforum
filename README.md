@@ -96,60 +96,78 @@ For more information please refer to [license](https://github.com/deforum-art/de
 
 ## Notes
 
-```
-backend:
-    > Actual model to be used for generation. Can be one of the following:
-    - 'base': Stable Diffusion 1.5
-    - 'sdxl': Stable Diffusion XL
-data:
-    > Helper data for certain types of generation or misc things
-    - 'wildcards'
-    - 'templates'
-    - 'prompts'
-    - 'stopwords'
-    - 'light-weight-models'
-mixins:
-    > Superclasses which are used when instantiating classes from backend
-    - TODO: Add mixins to backend directory
-modules:
-    > Animation helper classes, controlnet auxiliary model processors for use DURING a generation...
-    - 'animation'
-    - 'controlnet'
-    - 'stylegan2'
-    - 'loras'
-    - 'noise augmentations'
-    - 'upscalers'
-    - 'keyframing'
-    - 'misc image transformations'
-    - 'warp functions'
-    - 'attn processors' TODO: Move to backend
-    - 'video compilation'
-    - 'video postprocessing'
-    - 'video processing'
-    - 'video transformations'
-    - 'video utils'
-pipelines:
-    > Pipeline classes which are used to generate images or videos sample function implementation
-    > for the different models in backend, using helper modules from /modules'
-    - 'base (txt2img, img2img, two-pass)'
-    - 'vid2vid'
-    - 'txt2vid'
-    - 'prompt interpolation'
-    - 'animatediff'
-    - '...experimental pipelines'
-typed_classes:
-    > Typed classes which are used for type validation and type help
-    - 'deforum initialization config'
-    - 'pipeline specific arguments'
-    - 'pipeline specific output classes'
-utils:
-    > Utilities for working with images / videos / text outside of actual generation
-    - 'image handler'
-    - 'template parser'
-    - 'image filename processing'
-    - 'reading / writing video files'
-    - 'mixed model initialization'
+**deforum/backend:**
+> Actual model to be used for generation. Can be one of the following:
+- base: Stable Diffusion 1.5
+- sdxl: Stable Diffusion XL
 
+**deforum/backend/mixins:**
+> Superclasses which are used when instantiating classes from backend
+
+**deforum/backend/attn_processors:**
+> Diffusers Attention processors
+- flash-attn-2
+
+**deforum/backend/model_loading:**
+> Model loading factories for specific model types
+- sd1.5 (sd_loader.py)
+- sdxl (sdxl_loader.py)
+
+**deforum/backend/models:**
+> Model classes for specific model types, which implement the actual \_\_call\_\_ function which performs the diffusion inference loop.
+- sd1.5 (sd_pipeline.py)
+- sdxl (sdxl_pipeline.py)
+- abstract (abstract_pipeline.py) # abstract base class for all models
+
+**deforum/data:**
+> Helper data for certain types of generation or misc things
+- wildcards
+- templates
+- prompts
+- light-weight-models
+- stopwords
+
+**deforum/modules:**
+> Animation helper classes, controlnet auxiliary model processors for use DURING a generation...
+- animation
+- controlnet
+- stylegan2
+- loras
+- noise augmentations
+- upscalers
+- keyframing
+- misc image transformations
+- warp functions
+- video compilation
+- video postprocessing
+- video processing
+- video transformations
+- video utils
+
+**deforum/pipelines:**
+> Pipeline classes which are used to generate images or videos sample function implementation for the different models in backend, using helper modules from /modules
+- base (txt2img, img2img, two-pass)
+- vid2vid
+- txt2vid
+- prompt interpolation
+- animatediff
+- ...experimental pipelines
+
+**deforum/typed_classes:**
+> Typed classes which are used for type validation and type help
+- deforum initialization config
+- pipeline specific arguments
+- pipeline specific output classes
+
+**deforum/utils:**
+> Utilities for working with images / videos / text outside of actual generation
+- image handler
+- template parser
+- image filename processing
+- reading / writing video files
+- mixed model initialization
+
+```
 deforum/
     backend/
         mixins/

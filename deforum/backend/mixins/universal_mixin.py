@@ -1,8 +1,9 @@
 import torch
 from diffusers.utils import is_accelerate_available, is_accelerate_version
+from ..abstract_pipeline import AbstractPipeline
 
 
-class DiffusersBaseMixin:
+class DiffusersBaseMixin(AbstractPipeline):
     @property
     # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.StableDiffusionPipeline._execution_device
     def _execution_device(self):

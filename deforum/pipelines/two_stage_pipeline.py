@@ -1,7 +1,7 @@
 from pydantic import BaseConfig
 import torch
 
-from deforum.backend.models import AbstractPipeline
+from deforum.backend import AbstractPipeline
 from deforum.typed_classes import ResultBase
 from deforum.typed_classes.generation_args_two_stage import GenerationArgsTwoStage
 from deforum.utils.image_utils import resize_tensor_result

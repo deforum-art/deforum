@@ -1,8 +1,8 @@
 """
-This module loads the custom CLIP Text model and SDLPWPipeline (1.5) based on a given 
+This module loads the custom CLIP Text model and SDLPWPipeline (1.5) based on a given
 configuration.
 
-This module uses the loguru, deforum.backend, deforum.modules, deforum.typed_classes 
+This module uses the loguru, deforum.backend, deforum.modules, deforum.typed_classes
 and deforum.utils.
 
 Raises
@@ -11,10 +11,10 @@ ValueError: If model fails to load.
 """
 
 from loguru import logger
-from deforum.backend import CustomCLIPTextModel, SDLPWPipelineOneFive
-from deforum.modules import AttnProcessorFlash2_2_0
+from deforum.backend import CustomCLIPTextModel, SDLPWPipelineOneFive, AttnProcessorFlash2_2_0
 from deforum.typed_classes import DeforumConfig
 from deforum.utils import channels_last
+
 
 class SDLoader:
     """
@@ -25,16 +25,16 @@ class SDLoader:
     _load_pipe(config, extra)
         Returns the SDLPWPipeline (1.5) instantiated with given configuration.
     load(config)
-        Returns the SDLPWPipeline (1.5) loaded with the given configuration and 
+        Returns the SDLPWPipeline (1.5) loaded with the given configuration and
         potentially exceptions handled.
     """
 
     @staticmethod
     def _load_pipe(config: DeforumConfig, extra: dict) -> SDLPWPipelineOneFive:
         """
-        A static method that loads the SDLPWPipeline (1.5) given the configuration 
+        A static method that loads the SDLPWPipeline (1.5) given the configuration
         and extra instructions.
-        
+
         Parameters
         ----------
         config : DeforumConfig
@@ -47,14 +47,13 @@ class SDLoader:
         SDLPWPipelineOneFive
             The SDLPWPipeline (1.5) loaded with the given parameters.
         """
-        common_kwargs = {"torch_dtype": config.dtype, "variant": config.variant, \
-                         "use_safetensors": config.use_safetensors}
+        common_kwargs = {
+            "torch_dtype": config.dtype,
+            "variant": config.variant,
+            "use_safetensors": config.use_safetensors,
+        }
 
-        text_encoder = CustomCLIPTextModel.from_pretrained(
-            config.model_name,
-            subfolder="text_encoder",
-            **common_kwargs
-        )
+        text_encoder = CustomCLIPTextModel.from_pretrained(config.model_name, subfolder="text_encoder", **common_kwargs)
 
         return SDLPWPipelineOneFive.from_pretrained(
             config.model_name,
@@ -66,9 +65,9 @@ class SDLoader:
     @classmethod
     def load(cls, config: DeforumConfig) -> SDLPWPipelineOneFive:
         """
-        Method that handles exceptions during the model loading process and loads 
+        Method that handles exceptions during the model loading process and loads
         the SDLPWPipeline (1.5).
-        
+
         Parameters
         ----------
         config : DeforumConfig

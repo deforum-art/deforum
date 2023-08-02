@@ -11,7 +11,7 @@ from deforum.modules import (
     preprocess_image,
     preprocess_mask,
 )
-from deforum.mixins.stable_diffusion import StableDiffusionBaseMixin
+from ..mixins import StableDiffusionBaseMixin
 
 # ------------------------------------------------------------------------------
 

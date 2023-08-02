@@ -7,7 +7,7 @@ images, and concatenating the results.
 Classes
 -------
 BasePipeline
-    BasePipeline is the parent class for all pipelines in Deform. It provides 
+    BasePipeline is the parent class for all pipelines in Deform. It provides
     methods to handle the various stages in the image processing pipeline.
 
 Dependencies
@@ -22,16 +22,17 @@ Dependencies
 
 from pydantic import BaseConfig
 import torch
-from deforum.backend.models import AbstractPipeline
+from deforum.backend import AbstractPipeline
 from deforum.typed_classes import GenerationArgs, ResultBase
 from deforum.utils.image_utils import ImageHandler
 from deforum.utils.helpers import parse_seed_for_mode
 
+
 class BasePipeline:
     """
-    BasePipeline is the parent class for all pipelines. 
+    BasePipeline is the parent class for all pipelines.
 
-    Deforum uses pipelines to handle the generation, processing, and saving of images. 
+    Deforum uses pipelines to handle the generation, processing, and saving of images.
 
     Attributes
     ----------
@@ -62,7 +63,7 @@ class BasePipeline:
     def __init__(self, model: AbstractPipeline, config: BaseConfig) -> None:
         """
         Constructs the necessary attributes for the BasePipeline object.
-        
+
         Parameters
         ----------
         model : AbstractPipeline
@@ -76,7 +77,7 @@ class BasePipeline:
     def prep_seed(args):
         """
         Prepares the seeds for the generation process based on the arguments.
-        
+
         Parameters
         ----------
         args :
@@ -95,7 +96,7 @@ class BasePipeline:
     def generate_images(model, args, seed):
         """
         Generates images using the provided model, arguments, and seed..
-        
+
         Parameters
         ----------
         model : AbstractPipeline
@@ -119,7 +120,7 @@ class BasePipeline:
     def save_images(args, images_):
         """
         Saves intermediate images if dictated by the arguments.
-        
+
         Parameters
         ----------
         args :
@@ -138,11 +139,15 @@ class BasePipeline:
                 image_index=-1,
             )
 
-    def sample(self, model: AbstractPipeline, args: GenerationArgs,) -> ResultBase:
+    def sample(
+        self,
+        model: AbstractPipeline,
+        args: GenerationArgs,
+    ) -> ResultBase:
         """
-        Combines preperation of seeds, generation of images and saving of images 
+        Combines preperation of seeds, generation of images and saving of images
         into one sampling process.
-        
+
         Parameters
         ----------
         model : AbstractPipeline

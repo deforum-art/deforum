@@ -1,4 +1,4 @@
-from ..backend.models import AbstractPipeline
+from ..backend import AbstractPipeline
 from ..typed_classes import GenerationVideo, ResultBase
 from .base_pipeline import BasePipeline
 
