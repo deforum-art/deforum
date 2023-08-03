@@ -143,17 +143,25 @@ class BasePipeline:
         # Image saving handler
         image_handler = self.image_handler.with_template(args.template_save_path)
 
+        # prepare seed
         args = self.prep_seed(args)
-        for _ in range(args.repeat):
-            args.seed = parse_seed_for_mode(args.seed, args.seed_mode, args.seed_list)
 
+        # repeat loop (batch)
+        for _ in range(args.repeat):
+
+            # generate image
             images_ = self.generate_images(model, args)
 
+            # save image
             if args.save_intermediates:
                 image_handler.save_images(images_, args)
 
+            # append image
             if args.return_images:
                 images.append(images_.cpu())
+
+            # update seed
+            args.seed = parse_seed_for_mode(args.seed, args.seed_mode, args.seed_list)
 
         if not args.return_images:
             images = None
