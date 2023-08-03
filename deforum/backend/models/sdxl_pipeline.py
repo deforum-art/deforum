@@ -41,7 +41,7 @@ from diffusers.utils import (
 )
 from transformers import CLIPTextModel, CLIPTextModelWithProjection, CLIPTokenizer
 
-from deforum.mixins.universal_mixin import DiffusersBaseMixin
+from ..mixins import DiffusersBaseMixin
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 

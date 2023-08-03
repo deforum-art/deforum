@@ -1,8 +1,10 @@
 import torch
 from diffusers.utils import is_accelerate_available, is_accelerate_version
+from ..abstract_pipeline import AbstractPipeline
+from .loras import LoraLoaderMixin
 
 
-class DiffusersBaseMixin:
+class DiffusersBaseMixin(AbstractPipeline, LoraLoaderMixin):
     @property
     # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.StableDiffusionPipeline._execution_device
     def _execution_device(self):

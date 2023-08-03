@@ -1,3 +1,2 @@
-from .custom_attn_processors.attn_processor_flash_2 import AttnProcessorFlash2_2_0
 from .image_preprocessing import preprocess_image, preprocess_mask
 from .prompt_processor import get_weighted_sd_text_embeddings

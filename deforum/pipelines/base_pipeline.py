@@ -7,7 +7,7 @@ images, and concatenating the results.
 Classes
 -------
 BasePipeline
-    BasePipeline is the parent class for all pipelines in Deform. It provides 
+    BasePipeline is the parent class for all pipelines in Deform. It provides
     methods to handle the various stages in the image processing pipeline.
 
 Dependencies
@@ -22,16 +22,17 @@ Dependencies
 
 from pydantic import BaseConfig
 import torch
-from deforum.backend.models import AbstractPipeline
+from deforum.backend import AbstractPipeline
 from deforum.typed_classes import GenerationArgs, ResultBase
 from deforum.utils.image_utils import ImageHandler
 from deforum.utils.helpers import parse_seed_for_mode
 
+
 class BasePipeline:
     """
-    BasePipeline is the parent class for all pipelines. 
+    BasePipeline is the parent class for all pipelines.
 
-    Deforum uses pipelines to handle the generation, processing, and saving of images. 
+    Deforum uses pipelines to handle the generation, processing, and saving of images.
 
     Attributes
     ----------
@@ -62,7 +63,7 @@ class BasePipeline:
     def __init__(self, model: AbstractPipeline, config: BaseConfig) -> None:
         """
         Constructs the necessary attributes for the BasePipeline object.
-        
+
         Parameters
         ----------
         model : AbstractPipeline
@@ -70,13 +71,13 @@ class BasePipeline:
         config : BaseConfig
             Configuration settings for the pipeline.
         """
-        pass
+        self.image_handler = ImageHandler()
 
     @staticmethod
-    def prep_seed(args):
+    def prep_seed(args) -> GenerationArgs:
         """
         Prepares the seeds for the generation process based on the arguments.
-        
+
         Parameters
         ----------
         args :
@@ -95,7 +96,7 @@ class BasePipeline:
     def generate_images(model, args, seed):
         """
         Generates images using the provided model, arguments, and seed..
-        
+
         Parameters
         ----------
         model : AbstractPipeline
@@ -115,34 +116,16 @@ class BasePipeline:
         images_ = model(**args.to_kwargs(), output_type="pt").images
         return images_
 
-    @staticmethod
-    def save_images(args, images_):
+    def sample(
+        self,
+        model: AbstractPipeline,
+        args: GenerationArgs,
+        image_handler: ImageHandler = None,
+    ) -> ResultBase:
         """
-        Saves intermediate images if dictated by the arguments.
-        
-        Parameters
-        ----------
-        args :
-            Arguments that dictate whether to save intermediate images or not.
-        images_ :
-            The intermediate images to be saved.
-        """
-        if args.save_intermediates:
-            ImageHandler.save_images(
-                ResultBase(
-                    image=images_,
-                    output_type="pt",
-                    args=args,
-                ),
-                template_str=args.template_save_path,
-                image_index=-1,
-            )
-
-    def sample(self, model: AbstractPipeline, args: GenerationArgs,) -> ResultBase:
-        """
-        Combines preperation of seeds, generation of images and saving of images 
+        Combines preperation of seeds, generation of images and saving of images
         into one sampling process.
-        
+
         Parameters
         ----------
         model : AbstractPipeline
@@ -156,15 +139,25 @@ class BasePipeline:
             Result object containing the images, output_type and corresponding arguments.
         """
         images = []
+
+        # Image saving handler
+        image_handler = self.image_handler.with_template(args.template_save_path)
+
         args = self.prep_seed(args)
         for _ in range(args.repeat):
             seed = parse_seed_for_mode(args.seed, args.seed_mode, args.seed_list)
 
             images_ = self.generate_images(model, args, seed)
-            self.save_images(args, images_)
 
-            images.append(images_.cpu())
+            if args.save_intermediates:
+                image_handler.save_images(images_, args)
 
-        images = torch.cat(images, 0)
+            if args.return_images:
+                images.append(images_.cpu())
+
+        if not args.return_images:
+            images = None
+        else:
+            images = torch.cat(images, dim=0)
 
         return ResultBase(image=images, output_type="pt", args=args)

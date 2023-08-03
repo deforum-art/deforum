@@ -2,11 +2,11 @@
 Module for Defining Image Generation Parameters and Related Functions
 
 This module provides the necessary classes and functions for defining and managing
-the parameters of an image generation task. 
+the parameters of an image generation task.
 It contains the `GenerationArgs` class which is a model for the parameters used in image generating,
 the `SchedulerType` class which defines enumerated types for scheduler, and their related methods.
 
-The module has dependencies on several other libraries including torch, PIL, numpy, 
+The module has dependencies on several other libraries including torch, PIL, numpy,
 and the built-in datetime and enum libraries.
 
 Attributes:
@@ -50,18 +50,19 @@ from . import DefaultBase
 
 class SchedulerType(Enum):
     """
-    An enumeration representing different scheduler types. 
-    
+    An enumeration representing different scheduler types.
+
     Enum Members
     ------------
-    EULER_ANCESTRAL, EULER, PNDM, DPMPP_SINGLESTEP, DPMPP_MULTISTEP, 
-    LMS, DDIM, UNIPC, SDE 
-    
+    EULER_ANCESTRAL, EULER, PNDM, DPMPP_SINGLESTEP, DPMPP_MULTISTEP,
+    LMS, DDIM, UNIPC, SDE
+
     Methods
     -------
-    to_scheduler : 
+    to_scheduler :
         returns a dictionary mapping enum members to their respective scheduler classes
     """
+
     EULER_ANCESTRAL = "euler_ancestral"
     EULER = "euler"
     PNDM = "pndm"
@@ -162,12 +163,15 @@ class GenerationArgs(DefaultBase):
         Flag to specify whether to save intermediate frames.
     template_save_path : Optional[str]
         The template path for saving the generated images.
+    return_images : Optional[bool]
+        Flag to specify whether to return the generated images.
 
     Methods
     -------
     to_kwargs(device: torch.device, exclude: Set[str]):
         Converts the GenerationArgs object to a dictionary usable for image generation.
     """
+
     prompt: Union[str, List[str]]
     negative_prompt: Optional[Union[str, List[str]]] = None
     image: Union[torch.FloatTensor, PIL.Image.Image] = None
@@ -199,6 +203,7 @@ class GenerationArgs(DefaultBase):
     seed_list: Optional[List[int]] = None
     save_intermediates: Optional[bool] = True
     template_save_path: Optional[str] = "samples/$prompt/$timestr/$custom_$index"
+    return_images: Optional[bool] = True
 
     def to_kwargs(
         self,
@@ -234,5 +239,6 @@ class GenerationArgs(DefaultBase):
                 "seed_mode",
                 "template_save_path",
                 "save_intermediates",
+                "return_all_images",
             }.union(exclude)
         )

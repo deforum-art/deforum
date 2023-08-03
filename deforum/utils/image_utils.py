@@ -2,9 +2,10 @@ import datetime
 from enum import Enum
 from os import PathLike
 from pathlib import Path
-from typing import Literal, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union
 
 import cv2
+import numpy as np
 import torch
 from loguru import logger
 from PIL import Image
@@ -18,6 +19,7 @@ from torchvision.io import (
     read_image,
     write_jpeg,
     write_png,
+    write_file,
 )
 
 from deforum.typed_classes import ResultBase
@@ -27,6 +29,7 @@ from deforum.utils.string_parsing import (
     find_next_index_in_template,
     normalize_text,
 )
+from ..typed_classes import GenerationArgs
 
 
 class ImageReadMode(Enum):
@@ -55,8 +58,44 @@ class ImageReadMode(Enum):
 
 
 class ImageHandler:
+    def __init__(
+        self,
+        template_path: Optional[Union[str, TemplateParser]] = "samples/$prompt/$timestr/$custom_$index",
+        custom: str = "sample",
+        quality: int = 95,
+        template_index_key="index",
+        index_digits=6,
+        suffix=".jpg",
+        tensor_format: Optional[Literal["chw", "hwc"]] = "chw",
+    ) -> None:
+        self.template_path = template_path
+        self.custom = custom
+        self.quality = quality
+        self.template_index_key = template_index_key
+        self.index_digits = index_digits
+        self.suffix = suffix
+        self.tensor_format = tensor_format
+
     @classmethod
-    def encode_image_as(cls, image, mode=ImageReadMode.RGB, jpeg_quality=95, png_compression=6, format="jpg"):
+    def with_template(
+        cls, template_path: Union[str, TemplateParser] = "samples/$prompt/$timestr/$custom_$index", *args, **kwargs
+    ) -> "ImageHandler":
+        return cls(template_path=template_path, *args, **kwargs)
+
+    def save_images(self, images, args: GenerationArgs):
+        return ImageHandler._save_images(
+            ResultBase(image=images, output_type="pt", args=args),
+            template_str=self.template_path,
+            image_index=-1,
+            custom=self.custom,
+            quality=self.quality,
+            template_index_key=self.template_index_key,
+            index_digits=self.index_digits,
+            suffix=self.suffix,
+        )
+
+    @classmethod
+    def encode_image_as(cls, image, jpeg_quality=95, png_compression=6, format="jpg"):
         if isinstance(image, torch.Tensor):
             if format == "jpg":
                 return encode_jpeg(image, quality=jpeg_quality)
@@ -68,7 +107,7 @@ class ImageHandler:
             raise ValueError(f"Unknown image type {type(image)}")
 
     @classmethod
-    def to_bytes_torch(cls, image, mode=ImageReadMode.RGB, jpeg_quality=95, png_compression=6, format="jpg"):
+    def to_bytes_torch(cls, image, jpeg_quality=95, png_compression=6, format="jpg"):
         if isinstance(image, torch.Tensor):
             if format == "jpg":
                 return encode_jpeg(image, quality=jpeg_quality).detach().cpu().numpy().tobytes()
@@ -131,11 +170,10 @@ class ImageHandler:
         if image.shape[-1] == 3:
             image = image.clone().permute(2, 0, 1)
 
-        image = image.float()
         image = image - image.min()
         image = image / image.max()
-        image = image * 255.0
-        image = image.clamp(0, 255).detach().type(torch.uint8).cpu()
+        image = image * 255
+        image = image.detach().clamp(0, 255).type(torch.uint8).contiguous().cpu()
         if path.suffix == ".jpg" or path.suffix == ".jpeg":
             write_jpeg(image, path.as_posix(), quality=quality)
         elif path.suffix == ".png":
@@ -157,7 +195,7 @@ class ImageHandler:
         assert index < len(result.image), f"Index {index} is out of bounds for image list of length {len(result.image)}"
 
     @classmethod
-    def save_images(
+    def _save_images(
         cls,
         result: ResultBase,
         template_str: Union[TemplateParser, str] = "samples/$custom_$timestr_$prompt_$index",
@@ -167,6 +205,7 @@ class ImageHandler:
         template_index_key="index",
         index_digits=6,
         suffix=".jpg",
+        tensor_format: Optional[Literal["chw", "hwc"]] = "chw",
     ):
         """
         Save images in a custom directory and filename format.
@@ -217,21 +256,94 @@ class ImageHandler:
             index = buffer_index_to_digits(index, index_digits)
             kwargs[template_index_key] = index
             file_path = template_str.safe_substitute(kwargs)
-            logger.info(f"Saving image {i} to file_path={file_path}")
+            logger.info(f"Saving image {index} to file_path={file_path}")
             file_path = Path(file_path)
             file_path.parent.mkdir(parents=True, exist_ok=True)
             # Save the image
-            ImageHandler.write_image_torch(image, file_path, quality=quality)
+            tensor_image = cls.tensors_to_uint8(image, tensor_format=tensor_format, output_format="chw")[0]
+            encoded = cls.encode_image_as(
+                tensor_image, jpeg_quality=quality, format=suffix[1:] if suffix.startswith(".") else suffix
+            )
+            write_file(file_path.as_posix(), encoded)
 
     @classmethod
-    def to_bytes(cls, result: ResultBase, index: int = -1, quality: int = 95) -> bytes:
-        """
-        Method for converting image to bytes.
-        """
-        cls.check_output_type(result)
-        cls.check_index(result, index)
+    def _to_hwc_tensors(
+        cls, image: torch.Tensor, tensor_format: Optional[Literal["nchw", "nhwc", "hwc", "chw"]] = "nchw"
+    ) -> List[torch.Tensor]:
+        if len(tensor_format) == 4:
+            image = image.unbind(0)
+            image: List[torch.Tensor] = [cls._to_hwc_tensors(img, tensor_format=tensor_format[1:])[0] for img in image]
+            return image
+        elif tensor_format == "chw":
+            image = image.permute(1, 2, 0)
+        elif tensor_format == "hwc":
+            pass
+        else:
+            raise ValueError(f"Invalid tensor_format {tensor_format}, must be one of ['nchw','nhwc','hwc','chw']")
+        return [image]
 
-        return ImageHandler.to_bytes_torch(result.image[index], jpeg_quality=quality)
+    @classmethod
+    def _to_chw_tensors(
+        cls, image: torch.Tensor, tensor_format: Optional[Literal["nchw", "nhwc", "hwc", "chw"]] = "nchw"
+    ) -> List[torch.Tensor]:
+        if len(tensor_format) == 4:
+            image = image.unbind(0)
+            image: List[torch.Tensor] = [cls._to_hwc_tensors(img, tensor_format=tensor_format[1:])[0] for img in image]
+            return image
+        elif tensor_format == "chw":
+            pass
+        elif tensor_format == "hwc":
+            image = image.permute(2, 0, 1)
+        else:
+            raise ValueError(f"Invalid tensor_format {tensor_format}, must be one of ['nchw','nhwc','hwc','chw']")
+        return [image]
+
+    @classmethod
+    def tensors_to_uint8(
+        cls,
+        tensors: torch.Tensor,
+        tensor_format: Optional[Literal["nchw", "nhwc", "hwc", "chw"]] = "nchw",
+        output_format: Optional[Literal["hwc", "chw"]] = "hwc",
+    ) -> list[torch.Tensor]:
+        if output_format == "hwc":
+            tensors = cls._to_hwc_tensors(tensors, tensor_format=tensor_format)
+        elif output_format == "chw":
+            tensors = cls._to_chw_tensors(tensors, tensor_format=tensor_format)
+        else:
+            raise ValueError(f"Invalid output_format {output_format}, must be one of ['hwc','chw']")
+        tensors = [tensor.detach() for tensor in tensors]
+        tensors = [tensor - tensor.min() for tensor in tensors]
+        tensors = [tensor / tensor.max() for tensor in tensors]
+        tensors = [tensor * 255.0 for tensor in tensors]
+        tensors = [tensor.clamp(0, 255).type(torch.uint8).cpu() for tensor in tensors]
+        return tensors
+
+    @classmethod
+    def to_pils(
+        cls, image: torch.Tensor, tensor_format: Optional[Literal["nchw", "nhwc", "hwc", "chw"]] = "nchw"
+    ) -> List[Image.Image]:
+        tensors = cls.tensors_to_uint8(image, tensor_format=tensor_format, output_format="hwc")
+        pils = [Image.fromarray(tensor.numpy().astype(np.uint8)) for tensor in tensors]
+        return pils
+
+    @classmethod
+    def to_nps(
+        cls, image: torch.Tensor, tensor_format: Optional[Literal["nchw", "nhwc", "hwc", "chw"]] = "nchw"
+    ) -> List[np.ndarray]:
+        tensors = cls.tensors_to_uint8_hwc(image, tensor_format=tensor_format, output_format="hwc")
+        np_images = [tensor.numpy() for tensor in tensors]
+        return np_images
+
+    @classmethod
+    def to_bytes(
+        cls,
+        image: torch.Tensor,
+        tensor_format: Optional[Literal["nchw", "nhwc", "hwc", "chw"]] = "nchw",
+        jpeg_quality: int = 95,
+    ) -> List[bytes]:
+        tensors = cls.tensors_to_uint8(image, tensor_format=tensor_format, output_format="chw")
+        tensors = [cls.to_bytes_torch(t, jpeg_quality=jpeg_quality) for t in tensors]
+        return tensors
 
 
 def resize_tensor_result(
@@ -257,7 +369,12 @@ def resize_tensor_result(
     elif tensor_format == "chw":
         result.image = result.image.unsqueeze(0)
 
-    result.image = torch.nn.functional.interpolate(result.image, size=new_size, mode="bicubic", antialias=True)
+    result.image = torch.nn.functional.interpolate(
+        result.image,
+        size=new_size,
+        mode="bicubic",
+        antialias=True if (new_size[0] * new_size[1]) < (result.image.shape[2] * result.image.shape[3]) else False,
+    )
     result.args.height = new_size[0]
     result.args.width = new_size[1]
     result.args.image = result.image

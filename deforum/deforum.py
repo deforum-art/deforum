@@ -1,8 +1,8 @@
 """
-The central class `Deforum` initializes with configurations provided by `DeforumConfig`. 
+The central class `Deforum` initializes with configurations provided by `DeforumConfig`.
 It loads the relevant model (SDLoader, SDXLLoader) and pipeline (BasePipeline, TwoStagePipeline)
-based on configuration. Later the model and pipeline can be switched on-demand using provided 
-methods. Generation with set configurations is performed using the `generate` method within 
+based on configuration. Later the model and pipeline can be switched on-demand using provided
+methods. Generation with set configurations is performed using the `generate` method within
 the `Deforum` class.
 
 Classes:
@@ -145,3 +145,43 @@ class Deforum:
             args, self.pipeline.args_type
         ), f"Expected args of type {self.pipeline.args_type}, got {type(args)}"
         return self.pipeline.sample(self.model, args, *_args, **kwargs)
+
+    def load_lora(self, path, name, default_strength=0.6):
+        """
+        Loads a LoRA model from a given path and name.
+
+        Parameters
+        ----------
+        path : str
+            The path to the LoRA model.
+        name : str
+            The name of the LoRA model.
+        default_strength : float
+            The default strength of the LoRA model.
+
+        Returns
+        ------
+        type
+            Self.
+        """
+        self.model.load_network(name, path, default_strength)
+        return self
+
+    def set_lora_strengths(self, lora_str: str):
+        """
+        Sets the LoRA strengths for the model.
+
+        Parameters
+        ----------
+        lora_str : str
+            The LoRA strengths, where each network is represented as it's name (that you provide)
+            and the strength of the network, separated by a comma. For example:
+            "network1:0.5,network2:0.6,network3:0.7"
+
+        Returns
+        ------
+        type
+            Self.
+        """
+        self.model.set_lora_strengths(lora_str)
+        return self

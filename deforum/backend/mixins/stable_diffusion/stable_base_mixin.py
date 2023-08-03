@@ -19,15 +19,13 @@ from loguru import logger
 from packaging import version
 from transformers import CLIPImageProcessor, CLIPTextModel, CLIPTokenizer
 
-from deforum.mixins import DiffusersBaseMixin
+from .. import DiffusersBaseMixin
 from deforum.modules import (
     get_weighted_sd_text_embeddings,
 )
 
 
-class StableDiffusionBaseMixin(
-    DiffusionPipeline, DiffusersBaseMixin, TextualInversionLoaderMixin, LoraLoaderMixin, FromSingleFileMixin
-):
+class StableDiffusionBaseMixin(DiffusionPipeline, DiffusersBaseMixin, TextualInversionLoaderMixin, FromSingleFileMixin):
     _optional_components = ["safety_checker", "feature_extractor"]
 
     def __init__(
