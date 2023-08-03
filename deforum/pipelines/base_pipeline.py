@@ -93,7 +93,7 @@ class BasePipeline:
         return args
 
     @staticmethod
-    def generate_images(model, args, seed):
+    def generate_images(model, args):
         """
         Generates images using the provided model, arguments, and seed..
 
@@ -112,7 +112,7 @@ class BasePipeline:
             Generated images.
         """
         model.scheduler = args.sampler.to_scheduler().from_config(model.scheduler.config)
-        args.generator = torch.Generator(model.device).manual_seed(seed)
+        args.generator = torch.Generator(model.device).manual_seed(args.seed)
         images_ = model(**args.to_kwargs(), output_type="pt").images
         return images_
 
@@ -145,9 +145,9 @@ class BasePipeline:
 
         args = self.prep_seed(args)
         for _ in range(args.repeat):
-            seed = parse_seed_for_mode(args.seed, args.seed_mode, args.seed_list)
+            args.seed = parse_seed_for_mode(args.seed, args.seed_mode, args.seed_list)
 
-            images_ = self.generate_images(model, args, seed)
+            images_ = self.generate_images(model, args)
 
             if args.save_intermediates:
                 image_handler.save_images(images_, args)
