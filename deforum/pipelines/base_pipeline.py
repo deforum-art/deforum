@@ -71,10 +71,10 @@ class BasePipeline:
         config : BaseConfig
             Configuration settings for the pipeline.
         """
-        pass
+        self.image_handler = ImageHandler()
 
     @staticmethod
-    def prep_seed(args):
+    def prep_seed(args) -> GenerationArgs:
         """
         Prepares the seeds for the generation process based on the arguments.
 
@@ -116,33 +116,11 @@ class BasePipeline:
         images_ = model(**args.to_kwargs(), output_type="pt").images
         return images_
 
-    @staticmethod
-    def save_images(args, images_):
-        """
-        Saves intermediate images if dictated by the arguments.
-
-        Parameters
-        ----------
-        args :
-            Arguments that dictate whether to save intermediate images or not.
-        images_ :
-            The intermediate images to be saved.
-        """
-        if args.save_intermediates:
-            ImageHandler.save_images(
-                ResultBase(
-                    image=images_,
-                    output_type="pt",
-                    args=args,
-                ),
-                template_str=args.template_save_path,
-                image_index=-1,
-            )
-
     def sample(
         self,
         model: AbstractPipeline,
         args: GenerationArgs,
+        image_handler: ImageHandler = None,
     ) -> ResultBase:
         """
         Combines preperation of seeds, generation of images and saving of images
@@ -161,15 +139,25 @@ class BasePipeline:
             Result object containing the images, output_type and corresponding arguments.
         """
         images = []
+
+        # Image saving handler
+        image_handler = self.image_handler.with_template(args.template_save_path)
+
         args = self.prep_seed(args)
         for _ in range(args.repeat):
             seed = parse_seed_for_mode(args.seed, args.seed_mode, args.seed_list)
 
             images_ = self.generate_images(model, args, seed)
-            self.save_images(args, images_)
 
-            images.append(images_.cpu())
+            if args.save_intermediates:
+                image_handler.save_images(images_, args)
 
-        images = torch.cat(images, 0)
+            if args.return_images:
+                images.append(images_.cpu())
+
+        if not args.return_images:
+            images = None
+        else:
+            images = torch.cat(images, dim=0)
 
         return ResultBase(image=images, output_type="pt", args=args)

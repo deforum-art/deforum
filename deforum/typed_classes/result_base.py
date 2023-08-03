@@ -20,4 +20,3 @@ class ResultBase(DefaultBase):
     ] = None
     output_type: Optional[Literal["np", "pt", "pil"]] = "pt"
     args: GenerationArgs
-    samples_dir: Optional[PathLike] = "samples"

@@ -25,9 +25,7 @@ from deforum.modules import (
 )
 
 
-class StableDiffusionBaseMixin(
-    DiffusionPipeline, DiffusersBaseMixin, TextualInversionLoaderMixin, LoraLoaderMixin, FromSingleFileMixin
-):
+class StableDiffusionBaseMixin(DiffusionPipeline, DiffusersBaseMixin, TextualInversionLoaderMixin, FromSingleFileMixin):
     _optional_components = ["safety_checker", "feature_extractor"]
 
     def __init__(

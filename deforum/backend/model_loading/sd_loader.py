@@ -11,9 +11,10 @@ ValueError: If model fails to load.
 """
 
 from loguru import logger
+import torch
 from deforum.backend import CustomCLIPTextModel, SDLPWPipelineOneFive, AttnProcessorFlash2_2_0
 from deforum.typed_classes import DeforumConfig
-from deforum.utils import channels_last
+from deforum.utils import channels_last, enable_optimizations
 
 
 class SDLoader:
@@ -83,6 +84,7 @@ class SDLoader:
         ValueError
             If model fails to load.
         """
+        enable_optimizations()
         extra = {}
         if config.mixed_model:
             extra["unet"] = config.mixed_model.merge().to(dtype=config.dtype)
@@ -98,5 +100,7 @@ class SDLoader:
         elif config.set_use_flash_attn_2:
             pipe.unet.set_attn_processor(AttnProcessorFlash2_2_0())
             pipe.vae.set_attn_processor(AttnProcessorFlash2_2_0())
+        pipe.vae.to(memory_format=torch.contiguous_format)
         pipe = channels_last(pipe)
+
         return pipe
