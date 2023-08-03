@@ -26,6 +26,7 @@ setup(
         "pydantic<2.0.0",
         "loguru",
         "einops",
+        "sortedcontainers",
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
