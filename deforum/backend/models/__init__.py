@@ -1,1 +1,2 @@
 from .sd_pipeline import SDLPWPipelineOneFive
+from .sdxl_pipeline import StableDiffusionXLPipeline

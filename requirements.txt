@@ -14,3 +14,4 @@ pydantic<2.0.0
 loguru
 einops
 sortedcontainers
+scipy
