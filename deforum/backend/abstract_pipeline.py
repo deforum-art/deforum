@@ -21,7 +21,7 @@ class AbstractPipeline(ABC):
         r"""
         Encodes the prompt into text encoder hidden states.
 
-        Args:
+        Args:y
             prompt (`str` or `list(int)`):
                 prompt to be encoded
             device: (`torch.device`):
