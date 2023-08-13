@@ -26,7 +26,6 @@ to_kwargs(device, exclude) : function
     Converts the GenerationArgs object to a dictionary for image generation.
 """
 import datetime
-from enum import Enum
 from typing import Any, Callable, Dict, List, Literal, Optional, Set, Union
 
 import numpy as np
@@ -34,65 +33,10 @@ import torch
 import PIL
 
 from pydantic import Field
-from diffusers.schedulers import (
-    DDIMScheduler,
-    DPMSolverMultistepScheduler,
-    DPMSolverSDEScheduler,
-    DPMSolverSinglestepScheduler,
-    EulerAncestralDiscreteScheduler,
-    EulerDiscreteScheduler,
-    LMSDiscreteScheduler,
-    PNDMScheduler,
-    UniPCMultistepScheduler,
-)
+
+
+from .schedulers import SchedulerType
 from . import DefaultBase
-
-
-class SchedulerType(Enum):
-    """
-    An enumeration representing different scheduler types.
-
-    Enum Members
-    ------------
-    EULER_ANCESTRAL, EULER, PNDM, DPMPP_SINGLESTEP, DPMPP_MULTISTEP,
-    LMS, DDIM, UNIPC, SDE
-
-    Methods
-    -------
-    to_scheduler :
-        returns a dictionary mapping enum members to their respective scheduler classes
-    """
-
-    EULER_ANCESTRAL = "euler_ancestral"
-    EULER = "euler"
-    PNDM = "pndm"
-    DPMPP_SINGLESTEP = "dpmpp_singlestep"
-    DPMPP_MULTISTEP = "dpmpp_multistep"
-    LMS = "lms"
-    DDIM = "ddim"
-    UNIPC = "unipc"
-    SDE = "sde"
-
-    def to_scheduler(self):
-        """
-        Maps the enum's values to the corresponding scheduler objects.
-
-        Returns
-        -------
-        object
-            The scheduler object corresponding to the enum value.
-        """
-        return {
-            self.EULER_ANCESTRAL.value: EulerAncestralDiscreteScheduler,
-            self.EULER.value: EulerDiscreteScheduler,
-            self.DDIM.value: DDIMScheduler,
-            self.PNDM.value: PNDMScheduler,
-            self.DPMPP_MULTISTEP.value: DPMSolverMultistepScheduler,
-            self.DPMPP_SINGLESTEP.value: DPMSolverSinglestepScheduler,
-            self.LMS.value: LMSDiscreteScheduler,
-            self.UNIPC.value: UniPCMultistepScheduler,
-            self.SDE.value: DPMSolverSDEScheduler,
-        }.get(self.value, EulerAncestralDiscreteScheduler)
 
 
 class GenerationArgs(DefaultBase):
@@ -195,7 +139,7 @@ class GenerationArgs(DefaultBase):
     callback_steps: int = 1
     cross_attention_kwargs: Optional[Dict[str, Any]] = None
     clip_skip: Optional[int] = None
-    sampler: Optional[SchedulerType] = SchedulerType.EULER_ANCESTRAL
+    sampler: Optional[SchedulerType] = SchedulerType.UNIPC
     seed: Optional[int] = Field(default_factory=lambda: np.random.randint(0, (2**16) - 1))
     start_time: Optional[float] = Field(default_factory=lambda: datetime.datetime.now().timestamp())
     repeat: Optional[int] = 1

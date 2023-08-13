@@ -18,3 +18,4 @@ pre-commit
 pre-commit-hooks
 black
 isort
+scipy
