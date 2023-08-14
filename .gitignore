@@ -6,3 +6,4 @@ samples/
 *.mp4
 test.py
 __pycache__/
+misc/

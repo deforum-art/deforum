@@ -1,0 +1,24 @@
+[tool.black]
+line-length = 120
+include = './*\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | __pycache__
+  | _mypy_cache
+  | misc
+  | samples
+  | examples
+  | third_party
+  | buck-out
+  | build
+  | dist
+)/
+'''
+[tool.isort]
+profile = "black"

@@ -1,175 +1,187 @@
 """
-This module provides the Deforum class which is used for image and video transformation.
+The central class `Deforum` initializes with configurations provided by `DeforumConfig`.
+It loads the relevant model (SDLoader, SDXLLoader) and pipeline (BasePipeline, TwoStagePipeline)
+based on configuration. Later the model and pipeline can be switched on-demand using provided
+methods. Generation with set configurations is performed using the `generate` method within
+the `Deforum` class.
 
-The main functionalities of the Deforum class includes the methods
-`animate_simple` and `vid2vid_simple` which offer the basic transformation ability
-on both images and videos using the pretrained model.
+Classes:
+    Deforum: Main class for operations.
 
-Classes
--------
-Deforum
-    Main class providing functionalities for image or video transformation.
-
-Example
--------
-deforum = Deforum(model_name="stabilityai/stable-diffusion-xl-base-1.0")
-prompt = "A beautiful sunrise over the ocean"
-deforum.animate_simple(prompt, width=706, height=1280, max_frames=40, strength=0.5)
+Exceptions:
+    Raises ValueError when an unknown model or pipeline type is provided in the configuration.
 """
-import os
-import cv2
-import torch
-from PIL import Image
-import torchvision.transforms.functional as TF
-
-from deforum.pipelines.img2img import StableDiffusionXLImg2ImgPipeline
+from deforum.backend import SDLoader, SDXLLoader
+from deforum.typed_classes import DeforumConfig
+from deforum.typed_classes.generation_args import GenerationArgs
+from deforum.utils import enable_optimizations
+from deforum.pipelines import BasePipeline, TwoStagePipeline
 
 
 class Deforum:
     """
-    Main application class which aids in image or video transformation.
+    Main class that constructs and operates the Deforum model.
 
-    Parameters
+    Attributes
     ----------
-    model_name : str
-        The name of the pretrained model.
-    dtype : torch.dtype
-        The data type of torch tensor.
-    variant : str
-        The parameter variant for the model.
-    use_safetensors : bool
-        Whether to use safe tensors or not.
-    device : str
-        The device to be used for computations, e.g. 'cuda' or 'cpu'.
-    sample_dir : str
-        The directory where the sample images will be saved.
-    sample_format : str
-        The format of the sample image file names.
+    model : type
+        The SDLoader or SDXLLoader model used for Deforum.
+    pipeline : type
+        The pipeline type used in the model (Base or Two-Stage).
     """
 
-    def __init__(
-        self,
-        model_name="stabilityai/stable-diffusion-xl-base-1.0",
-        dtype=torch.float16,
-        variant="fp16",
-        use_safetensors=True,
-        device="cuda",
-        sample_dir="samples",
-        sample_format="sample_{:05d}.png",
-    ):
-        self.model_name = model_name
-        self.dtype = dtype
-        self.variant = variant
-        self.use_safetensors = use_safetensors
-        self.device = device
-        self.sample_dir = sample_dir
-        self.sample_format = sample_format
-
-        self.pipe = StableDiffusionXLImg2ImgPipeline.from_pretrained(
-            model_name,
-            torch_dtype=dtype,
-            variant=variant,
-            use_safetensors=use_safetensors,
-        )
-        self.pipe.to(device)
-
-        if not os.path.exists(self.sample_dir):
-            os.makedirs(self.sample_dir)
-
-    def txt2vid_simple(
-        self,
-        prompt,
-        width=1024,
-        height=1024,
-        max_frames=40,
-        strength=0.5,
-        init=None
-    ):
+    def __init__(self, config: DeforumConfig):
         """
-        Animate the image transformation step by step according to the given prompt.
+        Constructs all the necessary attributes for the Deforum object.
 
         Parameters
         ----------
-        prompt : str
-            The prompt on the basis of which image will be transformed.
-        width : int
-            The width of the image in pixels.
-        height : int
-            The height of the image in pixels.
-        max_frames : int
-            The maximum number of frames to generate.
-        strength : float
-            The strength factor for the transformation.
-        init : torch.Tensor
-            The initial image tensor. It is None by default and starting image tensor is generated.
+        config : DeforumConfig
+            The configurations for Deforum.
         """
-        local_strength = 1
-        for iframe in range(max_frames):
-            image, init = self.pipe(
-                prompt=prompt,
-                width=width,
-                height=height,
-                image=init,
-                strength=local_strength,
-                num_inference_steps=50,
-            )
-            init = image
-            local_strength = strength
-            image.save(
-                os.path.join(self.sample_dir, self.sample_format.format(iframe + 1))
-            )
+        self.load_model(config)
+        self.load_pipeline(config)
 
-    def vid2vid_simple(
-        self,
-        prompt,
-        input_video_path,
-        output_dir,
-        width=1024,
-        height=1024,
-        max_frames=40,
-        strength=0.5,
-    ):
+    def load_model(self, config: DeforumConfig):
         """
-        Transforms a video according to a given prompt, frame by frame and save to the output directory.
+        Loads the desired model based on the configuration.
 
         Parameters
         ----------
-        prompt : str
-            The prompt on the basis of which video will be transformed.
-        input_video_path : str
-            The path to the input video file.
-        output_dir : str
-            The directory where the output images will be saved.
-        width : int
-            The width of the image in pixels.
-        height : int
-            The height of the image in pixels.
-        max_frames : int
-            The maximum number of frames to generate.
-        strength : float
-            The strength factor for transformation.
+        config : DeforumConfig
+            The configurations for Deforum.
+
+        Raises
+        ------
+        ValueError
+            If the model type provided in the config is unknown.
         """
-        vidcap = cv2.VideoCapture(input_video_path)
-        success, image = vidcap.read()
-        count = 0
-        init = None
-        while success and count < max_frames:
-            image = cv2.cvtColor(
-                image, cv2.COLOR_BGR2RGB
-            )  # Convert the BGR image to RGB
-            image = Image.fromarray(image)  # Convert the image to PIL format
-            image = image.resize((width, height))  # Resize image
-            image = TF.to_tensor(image).unsqueeze(
-                0
-            )  # Convert the PIL Image to a PyTorch tensor
-            image = image.to(self.device)
-            init = image
-            image, init = self.pipe(
-                prompt=prompt, width=width, height=height, image=init, strength=strength
+        if config.model_type in ["sd1.5", "sd2.1"]:
+            self.model = SDLoader.load(config)
+        elif config.model_type == "sdxl":
+            self.model = SDXLLoader.load(config)
+        else:
+            raise ValueError(
+                f"Unknown model type in config: {config.model_type}, \
+                    must be one of 'sd1.5', 'sdxl', 'sd2.1'"
             )
-            init = image
-            image.save(
-                os.path.join(output_dir, f"frame_{count:05d}.png")
-            )  # Save frame as PNG image
-            success, image = vidcap.read()
-            count += 1
+        enable_optimizations()
+        self.model.to(config.device)
+
+    def load_pipeline(self, config: DeforumConfig):
+        """
+        Loads the desired pipeline based on the configuration.
+
+        Parameters
+        ----------
+        config : DeforumConfig
+            The configurations for Deforum.
+
+        Raises
+        ------
+        ValueError
+            If the pipeline type provided in the config is unknown.
+        """
+        if config.pipeline_type in ["base"]:
+            self.pipeline = BasePipeline(self.model, config)
+        elif config.pipeline_type in ["2stage"]:
+            self.pipeline = TwoStagePipeline(self.model, config)
+        else:
+            raise ValueError(
+                f"Unknown pipeline type in config: \
+                             {config.pipeline_type}, must be 'base'"
+            )
+
+    def switch_model(self, config: DeforumConfig):
+        """
+        Switches the current model with a new model based on the configuration.
+        Note: Consider checking if the new model is compatible with the pipeline.
+
+        Parameters
+        ----------
+        config : DeforumConfig
+            The configurations for Deforum.
+        """
+        # TODO: Check if model is compatible with pipeline
+        self.load_model(config)
+
+    def switch_pipeline(self, config: DeforumConfig):
+        """
+        Switches the current pipeline with a new pipeline based on the configuration.
+        Note: Consider checking if the new pipeline is compatible with the model.
+
+        Parameters
+        ----------
+        config : DeforumConfig
+            The configurations for Deforum.
+        """
+        # TODO: Check if pipeline is compatible with model
+        self.load_pipeline(config)
+
+    def generate(self, args: GenerationArgs, *_args, **kwargs):
+        """
+        Generates a sample using the selected model and pipeline.
+
+        Parameters
+        ----------
+        args : GenerationArgs
+            The arguments needed for generation.
+        *_args : type
+            Extra arguments.
+        **kwargs : type
+            Extra keyword arguments.
+
+        Returns
+        ------
+        type
+            The generated sample.
+
+        Raises
+        ------
+        AssertionError
+            If the provided arguments are not the same type as the pipeline.
+        """
+        assert isinstance(
+            args, self.pipeline.args_type
+        ), f"Expected args of type {self.pipeline.args_type}, got {type(args)}"
+        return self.pipeline.sample(self.model, args, *_args, **kwargs)
+
+    def load_lora(self, path, name, default_strength=0.6):
+        """
+        Loads a LoRA model from a given path and name.
+
+        Parameters
+        ----------
+        path : str
+            The path to the LoRA model.
+        name : str
+            The name of the LoRA model.
+        default_strength : float
+            The default strength of the LoRA model.
+
+        Returns
+        ------
+        type
+            Self.
+        """
+        self.model.load_network(name, path, default_strength)
+        return self
+
+    def set_lora_strengths(self, lora_str: str):
+        """
+        Sets the LoRA strengths for the model.
+
+        Parameters
+        ----------
+        lora_str : str
+            The LoRA strengths, where each network is represented as it's name (that you provide)
+            and the strength of the network, separated by a comma. For example:
+            "network1:0.5,network2:0.6,network3:0.7"
+
+        Returns
+        ------
+        type
+            Self.
+        """
+        self.model.set_lora_strengths(lora_str)
+        return self

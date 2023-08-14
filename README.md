@@ -1,53 +1,180 @@
 # Deforum
 
-Deforum is a diffusion animation toolkit. You can use it to create simple animations and video conversions.
+Deforum is a Python package for diffusion animation toolkit.
 
 ## Installation
+
+You can install Deforum using one of the following methods:
+
+### PyPI
+
+Install from PyPI using `pip`:
 
 ```
 pip install deforum
 ```
 
-## Examples
+### Bash script (for Linux)
 
-### Text to Vid Simple
+There's a provided bash script if you're on a Linux system.
 
-Use txt2vid_simple to generate an animation with your prompt (e.g. "Cat Sushi"), a defined number of frames (e.g. 80), and a strength value (e.g. 0.5).
-
-```py
-from deforum import Deforum
-
-dd = Deforum()
-
-dd.txt2vid_simple(
-    prompt="Cat Sushi",
-    max_frames=80,
-    strength=0.5,
-)
+```
+./install-linux.sh
 ```
 
-### Video to Video Simple
+### Batch file (for Windows)
 
-You can also convert one video to another using the vid2vid_simple method. This requires an input video path, output directory, max number of frames, and a strength value.
+There's a provided batch file if you're on a Windows system.
 
-```py
-dd.vid2vid_simple(
-    prompt="Cat Sushi",
-    input_video_path="path/to/vid",
-    output_dir="out/put/dir",
-    max_frames=90,
-    strength=0.62,
-)
+```
+install-windows.bat
 ```
 
-## Contributing 
+### Requirements
 
-We welcome contributions! Please see our [contributing guidelines](CONTRIBUTING.md) for more details.
+Deforum has two sets of requirements which can be installed using:
 
-## License 
+```
+pip install -r requirements.txt
+```
 
-Deforum is licensed under the MIT License. See [LICENSE](LICENSE) for more information.
+For development requirements:
 
-## Contact
+```
+pip install -r requirements-dev.txt
+```
+## Package Overview
 
-If you have any questions or need further assistance, feel free to reach out directly to deforum.art@gmail.com.
+Deforum is structured in following modules:
+
+* `backend`: Contains the actual generation models. Options include `base` for Stable Diffusion 1.5 and `sdxl` for Stable Diffusion XL.
+
+* `data`: Contains helper data for certain types of generation like wildcards, templates, prompts, stopwords, lightweight models.
+
+* `modules`: Contains various helper classes and utilities for animation processing, controlnet auxiliary model processors, image transformation etc..
+
+* `pipelines`: Contains pipeline classes which are used to generate images or videos using helper modules.
+
+* `typed_classes`: Contains typed classes which are used for type validation and help.
+
+* `utils`: Contains utilities for handling images, videos, and text outside of actual generation.
+
+
+## Usage
+
+Here's a basic example:
+
+```python
+import torch
+from deforum import Deforum, DeforumConfig, GenerationArgs
+
+config = DeforumConfig(
+    model_name="Lykon/AbsoluteReality",
+    model_type="sd1.5",
+    dtype=torch.float16,
+)
+
+deforum = Deforum(config)
+
+args = GenerationArgs(
+    prompt="An ethereal cityscape under a starlit night sky",
+    negative_prompt="blurry, bright, devoid, and boring",
+    guidance_scale=7.5,
+    sampler="euler_ancestral",
+    num_inference_steps=30,
+)
+
+deforum.generate(args)
+
+```
+
+## License
+
+Deforum is licensed under the MIT License.
+
+For more information please refer to [license](https://github.com/deforum-art/deforum/blob/main/LICENSE).
+
+## Notes
+
+**deforum/backend:**
+> Actual model to be used for generation. Can be one of the following:
+- base: Stable Diffusion 1.5
+- sdxl: Stable Diffusion XL
+
+**deforum/backend/mixins:**
+> Superclasses which are used when instantiating classes from backend
+
+**deforum/backend/attn_processors:**
+> Diffusers Attention processors
+- flash-attn-2
+
+**deforum/backend/model_loading:**
+> Model loading factories for specific model types
+- sd1.5 (sd_loader.py)
+- sdxl (sdxl_loader.py)
+
+**deforum/backend/models:**
+> Model classes for specific model types, which implement the actual \_\_call\_\_ function which performs the diffusion inference loop.
+- sd1.5 (sd_pipeline.py)
+- sdxl (sdxl_pipeline.py)
+- abstract (abstract_pipeline.py) # abstract base class for all models
+
+**deforum/data:**
+> Helper data for certain types of generation or misc things
+- wildcards
+- templates
+- prompts
+- light-weight-models
+- stopwords
+
+**deforum/modules:**
+> Animation helper classes, controlnet auxiliary model processors for use DURING a generation...
+- animation
+- controlnet
+- stylegan2
+- loras
+- noise augmentations
+- upscalers
+- keyframing
+- misc image transformations
+- warp functions
+- video compilation
+- video postprocessing
+- video processing
+- video transformations
+- video utils
+
+**deforum/pipelines:**
+> Pipeline classes which are used to generate images or videos sample function implementation for the different models in backend, using helper modules from /modules
+- base (txt2img, img2img, two-pass)
+- vid2vid
+- txt2vid
+- prompt interpolation
+- animatediff
+- ...experimental pipelines
+
+**deforum/typed_classes:**
+> Typed classes which are used for type validation and type help
+- deforum initialization config
+- pipeline specific arguments
+- pipeline specific output classes
+
+**deforum/utils:**
+> Utilities for working with images / videos / text outside of actual generation
+- image handler
+- template parser
+- image filename processing
+- reading / writing video files
+- mixed model initialization
+
+```
+deforum/
+    backend/
+        mixins/
+    data/
+    modules/
+    pipelines/
+    typed_classes/
+    utils/
+    deforum.py
+```
