@@ -71,7 +71,7 @@ class DeforumConfig(DefaultBase):
     use_safetensors: Optional[bool]
 
     model_type: Literal["sdxl", "sd1.5", "sd2.1"] = "sd1.5"
-    pipeline_type: Optional[Literal["base", "vid2vid", "2stage"]] = "base"
+    pipeline_type: Optional[Literal["base", "vid2vid", "2stage", "deforum"]] = "base"
 
     use_xformers: Optional[bool] = False
     set_use_flash_attn_2: Optional[bool] = False

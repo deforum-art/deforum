@@ -15,7 +15,7 @@ from deforum.backend import SDLoader, SDXLLoader
 from deforum.typed_classes import DeforumConfig
 from deforum.typed_classes.generation_args import GenerationArgs
 from deforum.utils import enable_optimizations
-from deforum.pipelines import BasePipeline, TwoStagePipeline
+from deforum.pipelines import BasePipeline, TwoStagePipeline, DeforumPipeline
 
 
 class Deforum:
@@ -86,6 +86,8 @@ class Deforum:
             self.pipeline = BasePipeline(self.model, config)
         elif config.pipeline_type in ["2stage"]:
             self.pipeline = TwoStagePipeline(self.model, config)
+        elif config.pipeline_type in ["deforum"]:
+            self.pipeline = DeforumPipeline(self.model, config)
         else:
             raise ValueError(
                 f"Unknown pipeline type in config: \
