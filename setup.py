@@ -27,6 +27,7 @@ setup(
         "loguru",
         "einops",
         "sortedcontainers",
+        "scipy",
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
