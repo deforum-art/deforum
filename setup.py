@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="deforum",
-    version="0.1.6",
+    version="0.1.7",
     author="deforum",
     author_email="deforum.art@gmail.com",
     description="diffusion animation toolkit",
@@ -10,6 +10,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/deforum-art/deforum",
     packages=find_packages(),
+    package_data={'deforum': ['data/*.txt']},  # Include any .txt files in deforum/data/
     install_requires=[
         "diffusers>0.19.0",
         "torch>=2.0.0",
