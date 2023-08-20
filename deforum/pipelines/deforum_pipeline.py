@@ -1,8 +1,14 @@
+import json
+import os.path
+from typing import Any
+
 from pydantic import BaseConfig
 
 from ..backend import AbstractPipeline
 from ..typed_classes import GenerationArgsAnimation, ResultBase
 from .base_pipeline import BasePipeline
+
+
 
 
 class DeforumPipeline(BasePipeline):
@@ -16,6 +22,6 @@ class DeforumPipeline(BasePipeline):
         args: GenerationArgsAnimation,
     ) -> ResultBase:
         """
-        Generate a sample image from the given text prompt.
+        Generate a Deforum animation based on the prompts and parameters.
         """
         raise NotImplementedError("DeforumPipeline is not implemented yet.")
