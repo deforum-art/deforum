@@ -75,13 +75,13 @@ class KeyChain:
                     values[mask] = [sinusoidal_interpolation(t, start_value, end_value) for t in t_values]
 
 
-                # TODO: Add other interpolation methods like Bezier etc.
+                # TODO: Add other interpolation methods
 
             interpolated_values[name] = values
 
         return interpolated_values
 
-    def get_values_for_frame(self, frame: int, key_type: str) -> Any:
+    def get_value_for_frame(self, frame: int, key_type: str) -> Any:
         """ Returns the interpolated value for a given frame and key type """
         # First, ensure the keys have been interpolated
         interpolated_values = self.interpolate(max_frames=frame + 1)  # Assuming 0-based frame indexing
