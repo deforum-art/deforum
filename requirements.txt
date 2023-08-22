@@ -1,3 +1,4 @@
+# general packages
 accelerate
 diffusers>0.19.0
 einops
@@ -15,3 +16,9 @@ sortedcontainers
 torch>=2.0.0
 torchvision
 transformers
+
+# development packages
+black
+isort
+pre-commit
+pre-commit-hooks

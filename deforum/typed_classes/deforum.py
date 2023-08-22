@@ -15,7 +15,7 @@ Exceptions
 ----------
 Raises ValueError when an unknown model or pipeline type is provided in the configuration.
 """
-from typing import Literal, Optional
+from typing import Literal, Optional, Union, List, Tuple
 import torch
 from diffusers.utils import is_xformers_available
 from pydantic import validator
@@ -76,6 +76,8 @@ class DeforumConfig(DefaultBase):
     use_xformers: Optional[bool] = False
     set_use_flash_attn_2: Optional[bool] = False
     mixed_model: MixedModel = None
+
+    controlnet: Union[str, List[str], Tuple[str]] = None
 
     @validator("use_xformers", pre=True)
     def validate_xformers(cls, value, values, config, field):

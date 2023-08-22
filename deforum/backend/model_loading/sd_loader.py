@@ -1,53 +1,23 @@
-"""
-This module loads the custom CLIP Text model and SDLPWPipeline (1.5) based on a given
-configuration.
-
-This module uses the loguru, deforum.backend, deforum.modules, deforum.typed_classes
-and deforum.utils.
-
-Raises
-------
-ValueError: If model fails to load.
-"""
-
 from loguru import logger
 import torch
-from deforum.backend import CustomCLIPTextModel, SDLPWPipelineOneFive, AttnProcessorFlash2_2_0
+from deforum.backend import CustomCLIPTextModel, StableDiffusionPipeline, AttnProcessorFlash2_2_0
 from deforum.typed_classes import DeforumConfig
 from deforum.utils import channels_last, enable_optimizations
+from diffusers import ControlNetModel
 
 
 class SDLoader:
-    """
-    A class used to load the SDLPWPipeline (1.5) model.
-
-    Methods
-    -------
-    _load_pipe(config, extra)
-        Returns the SDLPWPipeline (1.5) instantiated with given configuration.
-    load(config)
-        Returns the SDLPWPipeline (1.5) loaded with the given configuration and
-        potentially exceptions handled.
-    """
 
     @staticmethod
-    def _load_pipe(config: DeforumConfig, extra: dict) -> SDLPWPipelineOneFive:
-        """
-        A static method that loads the SDLPWPipeline (1.5) given the configuration
-        and extra instructions.
+    def _load_controlnet(config: DeforumConfig):
+        if isinstance(config.controlnet, str):
+            return [ControlNetModel.from_pretrained(config.controlnet, torch_dtype=config.dtype)]
+        if isinstance(config.controlnet, (list, tuple)):
+            return [ControlNetModel.from_pretrained(cn, torch_dtype=config.dtype) for cn in config.controlnet]
 
-        Parameters
-        ----------
-        config : DeforumConfig
-            The configurations for Deforum.
-        extra : dict
-            Dictionary containing additional instructions.
+    @staticmethod
+    def _load_pipe(cls, config: DeforumConfig, extra: dict) -> StableDiffusionPipeline:
 
-        Returns
-        -------
-        SDLPWPipelineOneFive
-            The SDLPWPipeline (1.5) loaded with the given parameters.
-        """
         common_kwargs = {
             "torch_dtype": config.dtype,
             "variant": config.variant,
@@ -55,42 +25,26 @@ class SDLoader:
         }
 
         text_encoder = CustomCLIPTextModel.from_pretrained(config.model_name, subfolder="text_encoder", **common_kwargs)
+        controlnet = cls._load_controlnet(config) if config.controlnet else None
 
-        return SDLPWPipelineOneFive.from_pretrained(
+        return StableDiffusionPipeline.from_pretrained(
             config.model_name,
             text_encoder=text_encoder,
+            controlnet=controlnet,
             **common_kwargs,
             **extra,
         )
 
     @classmethod
-    def load(cls, config: DeforumConfig) -> SDLPWPipelineOneFive:
-        """
-        Method that handles exceptions during the model loading process and loads
-        the SDLPWPipeline (1.5).
+    def load(cls, config: DeforumConfig) -> StableDiffusionPipeline:
 
-        Parameters
-        ----------
-        config : DeforumConfig
-            The configurations for Deforum.
-
-        Returns
-        -------
-        SDLPWPipelineOneFive
-            The SDLPWPipeline (1.5) loaded with the given parameters, exceptions handled.
-
-        Raises
-        ------
-        ValueError
-            If model fails to load.
-        """
         enable_optimizations()
         extra = {}
         if config.mixed_model:
             extra["unet"] = config.mixed_model.merge().to(dtype=config.dtype)
 
         try:
-            pipe = cls._load_pipe(config, extra)
+            pipe = cls._load_pipe(cls, config, extra)
         except Exception as err:
             logger.exception(f"Failed to load model: {err}", exc_info=True, stack_info=True)
             raise ValueError("Failed to load the model") from err

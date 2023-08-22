@@ -118,16 +118,29 @@ class GenerationArgs(DefaultBase):
 
     prompt: Union[str, List[str]]
     negative_prompt: Optional[Union[str, List[str]]] = None
-    image: Union[torch.FloatTensor, PIL.Image.Image] = None
-    mask_image: Union[torch.FloatTensor, PIL.Image.Image] = None
     height: int = 512
     width: int = 512
     num_inference_steps: int = 50
     guidance_scale: float = 7.5
-    strength: float = 0.8
-    num_images_per_prompt: Optional[int] = 1
     add_predicted_noise: Optional[bool] = False
+    num_images_per_prompt: Optional[int] = 1
     eta: float = 0.0
+    clip_skip: Optional[int] = None
+    init_image: Union[torch.FloatTensor, PIL.Image.Image] = None
+    init_mask_image: Union[torch.FloatTensor, PIL.Image.Image] = None
+    init_strength: float = 0.6
+    control_image: Union[
+        torch.FloatTensor,
+        PIL.Image.Image,
+        np.ndarray,
+        List[torch.FloatTensor],
+        List[PIL.Image.Image],
+        List[np.ndarray],
+    ] = None
+    control_conditioning_scale: Union[float, List[float]] = 1.0
+    control_guidance_start: Union[float, List[float]] = 0.0
+    control_guidance_end: Union[float, List[float]] = 1.0
+    control_guess_mode: bool = False,
     generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None
     latents: Optional[torch.FloatTensor] = None
     prompt_embeds: Optional[torch.FloatTensor] = None
@@ -138,7 +151,6 @@ class GenerationArgs(DefaultBase):
     is_cancelled_callback: Optional[Callable[[], bool]] = None
     callback_steps: int = 1
     cross_attention_kwargs: Optional[Dict[str, Any]] = None
-    clip_skip: Optional[int] = None
     sampler: Optional[SchedulerType] = SchedulerType.UNIPC
     seed: Optional[int] = Field(default_factory=lambda: np.random.randint(0, (2**16) - 1))
     start_time: Optional[float] = Field(default_factory=lambda: datetime.datetime.now().timestamp())

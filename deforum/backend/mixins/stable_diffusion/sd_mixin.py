@@ -3,6 +3,8 @@ from typing import Optional, Union, List, Tuple
 
 from loguru import logger
 from packaging import version
+import numpy as np
+import PIL
 import torch
 from transformers import CLIPImageProcessor, CLIPTextModel, CLIPTokenizer
 
@@ -26,9 +28,10 @@ from .. import DiffusersBaseMixin
 from ....modules import (
     get_weighted_sd_text_embeddings,
 )
+import torch.nn.functional as F
 
 
-class StableDiffusionBaseMixin(DiffusionPipeline, DiffusersBaseMixin, TextualInversionLoaderMixin, FromSingleFileMixin, LoraLoaderMixin):
+class StableDiffusionMixin(DiffusionPipeline, DiffusersBaseMixin, TextualInversionLoaderMixin, FromSingleFileMixin, LoraLoaderMixin):
 
     _optional_components = ["safety_checker", "feature_extractor"]
 
@@ -258,9 +261,10 @@ class StableDiffusionBaseMixin(DiffusionPipeline, DiffusersBaseMixin, TextualInv
         prompt_embeds=None,
         negative_prompt_embeds=None,
         clip_skip=None,
-        controlnet_conditioning_scale=1.0,
-        control_guidance_start=0.0,
-        control_guidance_end=1.0,
+        control_image=None,
+        control_conditioning_scale=None,
+        control_guidance_start=None,
+        control_guidance_end=None,
     ):
         
         # check height and width
@@ -313,6 +317,102 @@ class StableDiffusionBaseMixin(DiffusionPipeline, DiffusersBaseMixin, TextualInv
         if clip_skip is not None and (not isinstance(clip_skip, int) or clip_skip < 0):
             raise ValueError(f"`clip_skip` has to be a integer greater than or equal to 0 but is {clip_skip} of type {type(clip_skip)}.")
         
+        if control_image is not None:
+            # check controlnets
+            # `prompt` needs more sophisticated handling when there are multiple
+            # conditionings.
+            if isinstance(self.controlnet, MultiControlNetModel):
+                if isinstance(prompt, list):
+                    logger.warning(
+                        f"You have {len(self.controlnet.nets)} ControlNets and you have passed {len(prompt)}"
+                        " prompts. The conditionings will be fixed across the prompts."
+                    )
+
+            if isinstance(control_guidance_start, tuple):
+                control_guidance_start = list(control_guidance_start)
+
+            if isinstance(control_guidance_end, tuple):
+                control_guidance_end = list(control_guidance_end)
+
+            # Check `image`
+            is_compiled = hasattr(F, "scaled_dot_product_attention") and isinstance(
+                self.controlnet, torch._dynamo.eval_frame.OptimizedModule
+            )
+            if (
+                isinstance(self.controlnet, ControlNetModel)
+                or is_compiled
+                and isinstance(self.controlnet._orig_mod, ControlNetModel)
+            ):
+                self.check_image(control_image, prompt, prompt_embeds)
+            elif (
+                isinstance(self.controlnet, MultiControlNetModel)
+                or is_compiled
+                and isinstance(self.controlnet._orig_mod, MultiControlNetModel)
+            ):
+                if not isinstance(control_image, list):
+                    raise TypeError("For multiple controlnets: `image` must be type `list`")
+
+                # When `image` is a nested list:
+                # (e.g. [[canny_image_1, pose_image_1], [canny_image_2, pose_image_2]])
+                elif any(isinstance(i, list) for i in control_image):
+                    raise ValueError("A single batch of multiple conditionings are supported at the moment.")
+                elif len(control_image) != len(self.controlnet.nets):
+                    raise ValueError(
+                        f"For multiple controlnets: `image` must have the same length as the number of controlnets, but got {len(control_image)} images and {len(self.controlnet.nets)} ControlNets."
+                    )
+
+                for image_ in control_image:
+                    self.check_image(image_, prompt, prompt_embeds)
+            else:
+                assert False
+
+            # Check `control_conditioning_scale`
+            if (
+                isinstance(self.controlnet, ControlNetModel)
+                or is_compiled
+                and isinstance(self.controlnet._orig_mod, ControlNetModel)
+            ):
+                if not isinstance(control_conditioning_scale, float):
+                    raise TypeError("For single controlnet: `control_conditioning_scale` must be type `float`.")
+            elif (
+                isinstance(self.controlnet, MultiControlNetModel)
+                or is_compiled
+                and isinstance(self.controlnet._orig_mod, MultiControlNetModel)
+            ):
+                if isinstance(control_conditioning_scale, list):
+                    if any(isinstance(i, list) for i in control_conditioning_scale):
+                        raise ValueError("A single batch of multiple conditionings are supported at the moment.")
+                elif isinstance(control_conditioning_scale, list) and len(control_conditioning_scale) != len(
+                    self.controlnet.nets
+                ):
+                    raise ValueError(
+                        "For multiple controlnets: When `control_conditioning_scale` is specified as `list`, it must have"
+                        " the same length as the number of controlnets"
+                    )
+            else:
+                assert False
+
+            if len(control_guidance_start) != len(control_guidance_end):
+                raise ValueError(
+                    f"`control_guidance_start` has {len(control_guidance_start)} elements, but `control_guidance_end` has {len(control_guidance_end)} elements. Make sure to provide the same number of elements to each list."
+                )
+
+            if isinstance(self.controlnet, MultiControlNetModel):
+                if len(control_guidance_start) != len(self.controlnet.nets):
+                    raise ValueError(
+                        f"`control_guidance_start`: {control_guidance_start} has {len(control_guidance_start)} elements but there are {len(self.controlnet.nets)} controlnets available. Make sure to provide {len(self.controlnet.nets)}."
+                    )
+
+            for start, end in zip(control_guidance_start, control_guidance_end):
+                if start >= end:
+                    raise ValueError(
+                        f"control guidance start: {start} cannot be larger or equal to control guidance end: {end}."
+                    )
+                if start < 0.0:
+                    raise ValueError(f"control guidance start: {start} can't be smaller than 0.")
+                if end > 1.0:
+                    raise ValueError(f"control guidance end: {end} can't be larger than 1.0.")
+
 
     def get_timesteps(self, num_inference_steps, strength, device, is_text2img):
         if is_text2img:
@@ -430,3 +530,40 @@ class StableDiffusionBaseMixin(DiffusionPipeline, DiffusersBaseMixin, TextualInv
             image = torch.cat([image] * 2)
 
         return image
+    
+    def check_image(self, image, prompt, prompt_embeds):
+        image_is_pil = isinstance(image, PIL.Image.Image)
+        image_is_tensor = isinstance(image, torch.Tensor)
+        image_is_np = isinstance(image, np.ndarray)
+        image_is_pil_list = isinstance(image, list) and isinstance(image[0], PIL.Image.Image)
+        image_is_tensor_list = isinstance(image, list) and isinstance(image[0], torch.Tensor)
+        image_is_np_list = isinstance(image, list) and isinstance(image[0], np.ndarray)
+
+        if (
+            not image_is_pil
+            and not image_is_tensor
+            and not image_is_np
+            and not image_is_pil_list
+            and not image_is_tensor_list
+            and not image_is_np_list
+        ):
+            raise TypeError(
+                f"image must be passed and be one of PIL image, numpy array, torch tensor, list of PIL images, list of numpy arrays or list of torch tensors, but is {type(image)}"
+            )
+
+        if image_is_pil:
+            image_batch_size = 1
+        else:
+            image_batch_size = len(image)
+
+        if prompt is not None and isinstance(prompt, str):
+            prompt_batch_size = 1
+        elif prompt is not None and isinstance(prompt, list):
+            prompt_batch_size = len(prompt)
+        elif prompt_embeds is not None:
+            prompt_batch_size = prompt_embeds.shape[0]
+
+        if image_batch_size != 1 and image_batch_size != prompt_batch_size:
+            raise ValueError(
+                f"If image batch size is not 1, image batch size must be same as prompt batch size. image batch size: {image_batch_size}, prompt batch size: {prompt_batch_size}"
+            )

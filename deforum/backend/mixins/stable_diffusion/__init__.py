@@ -1,1 +1,1 @@
-from .stable_base_mixin import StableDiffusionBaseMixin
+from .sd_mixin import StableDiffusionMixin
